@@ -6,6 +6,26 @@ device.
 
 Built with Expo SDK 57, React Native 0.86, TypeScript (strict), Expo Router, and expo-sqlite.
 
+[![Download Android APK](https://img.shields.io/badge/Download%20APK-Android-2ea44f?style=for-the-badge&logo=android)](https://github.com/arafatmollah/Gochao/releases)
+[![Build APK Workflow](https://github.com/arafatmollah/Gochao/actions/workflows/build-apk.yml/badge.svg)](https://github.com/arafatmollah/Gochao/actions/workflows/build-apk.yml)
+
+---
+
+## 📲 Download for Mobile (Android)
+
+You can download and install the standalone Jibon app directly onto any Android device without Google Play Store:
+
+- **[⬇️ Download Latest Android APK](https://github.com/arafatmollah/Gochao/releases)** *(Direct download from GitHub Releases)*
+- **[📦 Download from CI Artifacts](https://github.com/arafatmollah/Gochao/actions/workflows/build-apk.yml)** *(Select the latest run and download the `Jibon-Android-APK` artifact)*
+
+### How to Install on Your Android Phone:
+1. Tap the download link above on your Android device to download `Jibon.apk`.
+2. Open your device's **Downloads** folder or tap the download completed notification.
+3. If prompted with *"For your security, your phone is not allowed to install unknown apps from this source"*, tap **Settings** and toggle **Allow from this source**.
+4. Tap **Install** to finish setup and launch Jibon.
+
+---
+
 ## Current status
 
 Phases 0–2 are implemented: database initialization + versioned migrations, the task
@@ -60,17 +80,21 @@ npm start            # start the dev server (Expo Go / dev build)
 npm run android      # start and open on Android
 npm run typecheck    # tsc --noEmit (strict)
 npm run lint         # eslint via expo lint
-npm test             # jest (unit, database, service, i18n, UI)
+npm run test             # jest (unit, database, service, i18n, UI)
+npm run build:apk        # build standalone installable Android APK with EAS Build
 ```
 
 Launch options:
 
-1. **Expo Go** (fastest, current feature set): `npm start`, then scan the QR code on Android.
-2. **Development build** (required once database encryption/SQLCipher lands in Phase 3):
+1. **Downloadable standalone APK (Recommended for users)**:
+   - Download the prebuilt APK from the [Releases](https://github.com/arafatmollah/Gochao/releases) or GitHub Actions.
+   - Or generate a fresh cloud APK with `npm run build:apk` (runs `npx eas-cli@latest build -p android --profile preview`).
+2. **Expo Go** (fastest, current feature set): `npm start`, then scan the QR code on Android.
+3. **Development build** (required once database encryption/SQLCipher lands in Phase 3):
    `npx expo run:android` with Android SDK/JDK installed, or `npx eas build --profile
    development --platform android`.
-3. **Bundle sanity check** (no device): `npx expo export --platform android`.
-4. **Web (development/verification target)**: `npx expo export --platform web`, then serve `dist/`
+4. **Bundle sanity check** (no device): `npx expo export --platform android`.
+5. **Web (development/verification target)**: `npx expo export --platform web`, then serve `dist/`
    with `Cross-Origin-Embedder-Policy: require-corp` and `Cross-Origin-Opener-Policy: same-origin`
    headers (needed by the SQLite WASM worker for persistent storage). `metro.config.js` adds the
    `.wasm` asset support and dev-server headers. The Metro *dev server* web path has an upstream
