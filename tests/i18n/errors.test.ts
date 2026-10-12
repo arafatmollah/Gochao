@@ -87,6 +87,7 @@ describe('translateValidationCode', () => {
   });
 
   it('translates prayer codes, interpolating shared limit constants', () => {
+
     expect(translateValidationCode('prayer_method_invalid', en)).toBe(
       'Please choose a valid calculation method.',
     );
@@ -98,6 +99,9 @@ describe('translateValidationCode', () => {
     );
     expect(translateValidationCode('prayer_adjust_invalid', bn)).toBe(
       'সমন্বয় -৬০ থেকে ৬০ মিনিটের পূর্ণ সংখ্যা হতে হবে।',
+    );
+    expect(translateValidationCode('prayer_timezone_invalid', en)).toBe(
+      'Enter the UTC offset in hours, e.g. 6 or +5:30.',
     );
   });
 

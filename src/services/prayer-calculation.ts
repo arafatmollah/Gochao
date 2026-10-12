@@ -17,10 +17,18 @@ import { parseIsoDate } from '@/utils/dates';
 
 /**
  * Offline prayer-time calculation built on the `adhan` library (pure
- * astronomy math — no network, no native modules). All inputs and outputs
- * use the device timezone: the input `YYYY-MM-DD` day is interpreted as a
- * local calendar day, and the returned `HH:mm` strings are local wall-clock
- * times for that day.
+ * astronomy math — no network, no native modules).
+ *
+ * Timezone model (the subtle part): adhan reads the input day in
+ * device-local components but returns instants anchored to UTC midnight, so
+ * formatting those instants with device-local getters is only correct when
+ * the device sits in the prayer location's timezone. Instead every instant
+ * is rendered as wall-clock through the location's `utcOffsetMinutes`
+ * setting (`instant + offset`), which is exact on any device, in any
+ * timezone, with no network and no tz database. The input day itself comes
+ * from the caller-supplied `YYYY-MM-DD` string (device-local noon keeps the
+ * Y/M/D stable across timezones), so the selected astronomical day never
+ * depends on where the device happens to be.
  */
 
 const METHOD_FACTORIES: Record<
@@ -49,9 +57,12 @@ export function buildCalculationParameters(settings: PrayerSettings): Calculatio
   return params;
 }
 
-function toWallClock(time: Date): string {
-  const hours = String(time.getHours()).padStart(2, '0');
-  const minutes = String(time.getMinutes()).padStart(2, '0');
+function toWallClock(instant: Date, utcOffsetMinutes: number): string {
+  const shifted =
+    (instant.getUTCHours() * 60 + instant.getUTCMinutes() + utcOffsetMinutes) % 1440;
+  const normalized = ((shifted % 1440) + 1440) % 1440;
+  const hours = String(Math.floor(normalized / 60)).padStart(2, '0');
+  const minutes = String(normalized % 60).padStart(2, '0');
   return `${hours}:${minutes}`;
 }
 
@@ -82,7 +93,10 @@ export function calculateDayTimes(date: string, settings: PrayerSettings): Praye
     maghrib: times.maghrib,
     isha: times.isha,
   };
-  return PRAYERS.map((prayer) => ({ prayer, time: toWallClock(byPrayer[prayer]) }));
+  return PRAYERS.map((prayer) => ({
+    prayer,
+    time: toWallClock(byPrayer[prayer], settings.utcOffsetMinutes),
+  }));
 }
 
 /** Current device-local wall-clock `HH:mm`. */

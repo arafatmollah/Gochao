@@ -137,6 +137,7 @@ const VALIDATION_KEYS: Record<string, string> = {
   prayer_latitude_invalid: 'validation.prayer_latitude_invalid',
   prayer_longitude_invalid: 'validation.prayer_longitude_invalid',
   prayer_city_too_long: 'validation.prayer_city_too_long',
+  prayer_timezone_invalid: 'validation.prayer_timezone_invalid',
   prayer_adjust_invalid: 'validation.prayer_adjust_invalid',
   prayer_date_invalid: 'validation.prayer_date_invalid',
   prayer_name_invalid: 'validation.prayer_name_invalid',

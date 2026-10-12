@@ -52,7 +52,21 @@ describe('PrayerService', () => {
       expect(merged.calculationMethod).toBe('karachi');
     });
 
+    it('persists the UTC offset and rejects out-of-range values', async () => {
+      expect((await service.updateSettings({ utcOffsetMinutes: 330 })).utcOffsetMinutes).toBe(
+        330,
+      );
+      expect((await service.getSettings()).utcOffsetMinutes).toBe(330);
+      await expect(service.updateSettings({ utcOffsetMinutes: 841 })).rejects.toMatchObject({
+        code: 'validation',
+      });
+      await expect(service.updateSettings({ utcOffsetMinutes: 5.5 })).rejects.toMatchObject({
+        code: 'validation',
+      });
+    });
+
     it('persists the reminders flag across saves', async () => {
+
       expect((await service.updateSettings({ remindersEnabled: true })).remindersEnabled).toBe(
         true,
       );

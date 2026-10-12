@@ -35,12 +35,17 @@ export type PrayerMadhab = (typeof PRAYER_MADHABS)[number];
 export const PRAYER_STATUSES = ['prayed', 'missed'] as const;
 export type PrayerStatus = (typeof PRAYER_STATUSES)[number];
 
-/** Dhaka, Bangladesh — the default location. */
+/** Dhaka, Bangladesh — the default location (UTC+6, no DST). */
 export const DEFAULT_PRAYER_LATITUDE = 23.8103;
 export const DEFAULT_PRAYER_LONGITUDE = 90.4125;
 export const DEFAULT_PRAYER_CITY = 'Dhaka';
 export const DEFAULT_PRAYER_METHOD: PrayerCalculationMethod = 'karachi';
 export const DEFAULT_PRAYER_MADHAB: PrayerMadhab = 'hanafi';
+/** Default location offset from UTC, in whole minutes (Dhaka, no DST). */
+export const DEFAULT_PRAYER_UTC_OFFSET_MINUTES = 360;
+/** Supported offset range: UTC−12:00 through UTC+14:00. */
+export const PRAYER_UTC_OFFSET_MIN = -720;
+export const PRAYER_UTC_OFFSET_MAX = 840;
 
 /** Manual per-prayer adjustments are whole minutes within this range. */
 export const PRAYER_ADJUST_MIN = -60;
@@ -54,6 +59,8 @@ export interface PrayerSettings {
   latitude: number;
   longitude: number;
   cityLabel: string;
+  /** Location offset from UTC in whole minutes; display = instant + offset. */
+  utcOffsetMinutes: number;
   /** Whole-minute manual offsets per prayer (negative = earlier). */
   adjustments: Record<PrayerName, number>;
   /** Whether a notification is scheduled at each prayer time. */
@@ -68,6 +75,7 @@ export interface UpdatePrayerSettingsInput {
   latitude?: number;
   longitude?: number;
   cityLabel?: string;
+  utcOffsetMinutes?: number;
   adjustments?: Partial<Record<PrayerName, number>>;
   remindersEnabled?: boolean;
 }

@@ -168,6 +168,22 @@ export default function PrayerSettingsScreen() {
                     />
                   </View>
                 </View>
+                <TextField
+                  label={t('prayer.timezoneLabel')}
+                  value={form.utcOffsetText}
+                  onChangeText={form.setUtcOffsetText}
+                  placeholder={t('prayer.timezonePlaceholder')}
+                  error={
+                    form.utcOffsetError
+                      ? translateValidationCode(form.utcOffsetError, t)
+                      : null
+                  }
+                  keyboardType="numbers-and-punctuation"
+                  testID="prayer-timezone-input"
+                />
+                <AppText variant="caption" color="textMuted">
+                  {t('prayer.timezoneHint')}
+                </AppText>
               </View>
 
               <View style={styles.fieldGroup}>

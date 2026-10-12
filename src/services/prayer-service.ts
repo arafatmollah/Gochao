@@ -25,6 +25,7 @@ import {
   validatePrayerMethod,
   validatePrayerName,
   validatePrayerStatus,
+  validateUtcOffsetMinutes,
 } from './prayer-validation';
 
 export interface PrayerServiceDeps {
@@ -176,6 +177,12 @@ export function createPrayerService(
         throw validationError(cityError);
       }
 
+      const utcOffsetMinutes = input.utcOffsetMinutes ?? current.utcOffsetMinutes;
+      const offsetError = validateUtcOffsetMinutes(utcOffsetMinutes);
+      if (offsetError) {
+        throw validationError(offsetError);
+      }
+
       const adjustments = { ...current.adjustments };
       if (input.adjustments) {
         for (const prayer of PRAYERS) {
@@ -197,6 +204,7 @@ export function createPrayerService(
         latitude,
         longitude,
         cityLabel: cityLabel === '' ? current.cityLabel : cityLabel,
+        utcOffsetMinutes,
         adjustments,
         remindersEnabled: input.remindersEnabled ?? current.remindersEnabled,
         updatedAt: now(),

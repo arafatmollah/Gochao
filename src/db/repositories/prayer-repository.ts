@@ -14,6 +14,7 @@ import {
   DEFAULT_PRAYER_LONGITUDE,
   DEFAULT_PRAYER_MADHAB,
   DEFAULT_PRAYER_METHOD,
+  DEFAULT_PRAYER_UTC_OFFSET_MINUTES,
 } from '@/types/prayer';
 
 import type { SqlDatabase } from '../sql';
@@ -29,6 +30,7 @@ interface PrayerSettingsRow {
   asr_adjust: number;
   maghrib_adjust: number;
   isha_adjust: number;
+  utc_offset_minutes: number | null;
   reminders_enabled: number | null;
   updated_at: string;
 }
@@ -64,8 +66,9 @@ function mapSettingsRow(row: PrayerSettingsRow): PrayerSettings {
       maghrib: row.maghrib_adjust,
       isha: row.isha_adjust,
     },
-    // Rows written before migration 011 have no flag; treat them as off.
+    // Rows written before migrations 011/012 lack the newer columns.
     remindersEnabled: row.reminders_enabled === 1,
+    utcOffsetMinutes: row.utc_offset_minutes ?? DEFAULT_PRAYER_UTC_OFFSET_MINUTES,
     updatedAt: row.updated_at,
   };
 }
@@ -106,7 +109,7 @@ export interface PrayerRepository {
 const SETTINGS_COLUMNS = `
   calculation_method, madhab, latitude, longitude, city_label,
   fajr_adjust, dhuhr_adjust, asr_adjust, maghrib_adjust, isha_adjust,
-  reminders_enabled, updated_at
+  utc_offset_minutes, reminders_enabled, updated_at
 `;
 
 export class SqlitePrayerRepository implements PrayerRepository {
@@ -127,9 +130,9 @@ export class SqlitePrayerRepository implements PrayerRepository {
       `INSERT INTO prayer_settings (
          id, calculation_method, madhab, latitude, longitude, city_label,
          fajr_adjust, dhuhr_adjust, asr_adjust, maghrib_adjust, isha_adjust,
-         reminders_enabled, updated_at
+         utc_offset_minutes, reminders_enabled, updated_at
        ) VALUES (
-         'default', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+         'default', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
        ) ON CONFLICT (id) DO UPDATE SET
          calculation_method = excluded.calculation_method,
          madhab = excluded.madhab,
@@ -141,6 +144,7 @@ export class SqlitePrayerRepository implements PrayerRepository {
          asr_adjust = excluded.asr_adjust,
          maghrib_adjust = excluded.maghrib_adjust,
          isha_adjust = excluded.isha_adjust,
+         utc_offset_minutes = excluded.utc_offset_minutes,
          reminders_enabled = excluded.reminders_enabled,
          updated_at = excluded.updated_at`,
       [
@@ -154,6 +158,7 @@ export class SqlitePrayerRepository implements PrayerRepository {
         settings.adjustments.asr,
         settings.adjustments.maghrib,
         settings.adjustments.isha,
+        settings.utcOffsetMinutes,
         settings.remindersEnabled ? 1 : 0,
         settings.updatedAt,
       ],
@@ -252,6 +257,7 @@ export function defaultPrayerSettings(): PrayerSettings {
     latitude: DEFAULT_PRAYER_LATITUDE,
     longitude: DEFAULT_PRAYER_LONGITUDE,
     cityLabel: DEFAULT_PRAYER_CITY,
+    utcOffsetMinutes: DEFAULT_PRAYER_UTC_OFFSET_MINUTES,
     adjustments: { fajr: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 },
     remindersEnabled: false,
     updatedAt: null,

@@ -6,6 +6,8 @@ import {
   PRAYER_CITY_MAX_LENGTH,
   PRAYER_MADHABS,
   PRAYER_STATUSES,
+  PRAYER_UTC_OFFSET_MAX,
+  PRAYER_UTC_OFFSET_MIN,
 } from '@/types/prayer';
 import { isValidIsoDate } from '@/utils/dates';
 import { normalizeDigitInput } from '@/utils/money';
@@ -26,6 +28,7 @@ export type PrayerValidationCode =
   | 'prayer_latitude_invalid'
   | 'prayer_longitude_invalid'
   | 'prayer_city_too_long'
+  | 'prayer_timezone_invalid'
   | 'prayer_adjust_invalid'
   | 'prayer_date_invalid'
   | 'prayer_name_invalid'
@@ -133,4 +136,47 @@ export function parseAdjustInput(value: string): number | null {
     return null;
   }
   return parsed;
+}
+
+export function validateUtcOffsetMinutes(offset: unknown): PrayerValidationCode | null {
+  if (typeof offset !== 'number' || !Number.isInteger(offset)) {
+    return 'prayer_timezone_invalid';
+  }
+  if (offset < PRAYER_UTC_OFFSET_MIN || offset > PRAYER_UTC_OFFSET_MAX) {
+    return 'prayer_timezone_invalid';
+  }
+  return null;
+}
+
+/**
+ * Parses a UTC offset as typed by a user: decimal hours (`6`, `+6`, `-4`,
+ * `5.5`) or `H:MM` (`+5:30`, `-3:30`). Returns whole minutes, or null when
+ * the text is unusable or outside UTC−12:00…UTC+14:00.
+ */
+export function parseUtcOffsetInput(value: string): number | null {
+  const normalized = normalizeDigitInput(value).trim().replace(/^\+/, '');
+  const entirety = /^(-?\d+)(?::([0-5]\d))?$/.exec(normalized);
+  const decimal = /^(-?\d+(?:\.\d+)?)$/.exec(normalized);
+  let minutes: number | null = null;
+  if (entirety) {
+    const hours = Number(entirety[1]);
+    const mins = entirety[2] === undefined ? 0 : Number(entirety[2]);
+    const sign = normalized.startsWith('-') ? -1 : 1;
+    minutes = sign * (Math.abs(hours) * 60 + mins);
+  } else if (decimal) {
+    minutes = Math.round(Number(decimal[1]) * 60);
+  }
+  if (minutes === null || !Number.isSafeInteger(minutes)) {
+    return null;
+  }
+  return validateUtcOffsetMinutes(minutes) === null ? minutes : null;
+}
+
+/** Formats whole minutes back to input text (`360` -> `+6`, `330` -> `+5:30`). */
+export function formatUtcOffsetInput(minutes: number): string {
+  const sign = minutes < 0 ? '-' : '+';
+  const absolute = Math.abs(minutes);
+  const hours = Math.floor(absolute / 60);
+  const remainder = absolute % 60;
+  return remainder === 0 ? `${sign}${hours}` : `${sign}${hours}:${String(remainder).padStart(2, '0')}`;
 }

@@ -14,11 +14,14 @@ import {
 import { formatWallClock12 } from '@/i18n/format';
 import { detectDeviceLocation } from '@/services/device-location';
 import {
+  formatUtcOffsetInput,
   parseAdjustInput,
   parseCoordinateInput,
+  parseUtcOffsetInput,
   validatePrayerCity,
   validatePrayerLatitude,
   validatePrayerLongitude,
+  validateUtcOffsetMinutes,
 } from '@/services/prayer-validation';
 import type {
   PrayerCalculationMethod,
@@ -47,6 +50,9 @@ export interface UsePrayerSettingsResult {
   longitudeText: string;
   setLongitudeText: (value: string) => void;
   longitudeError: string | null;
+  utcOffsetText: string;
+  setUtcOffsetText: (value: string) => void;
+  utcOffsetError: string | null;
   adjustTexts: Record<PrayerName, string>;
   setAdjustText: (prayer: PrayerName, value: string) => void;
   adjustError: string | null;
@@ -88,6 +94,7 @@ export function usePrayerSettings(): UsePrayerSettingsResult {
   const [city, setCity] = useState('');
   const [latitudeText, setLatitudeText] = useState('');
   const [longitudeText, setLongitudeText] = useState('');
+  const [utcOffsetText, setUtcOffsetText] = useState('+6');
   const [adjustTexts, setAdjustTexts] = useState<Record<PrayerName, string>>({
     fajr: '0',
     dhuhr: '0',
@@ -99,6 +106,7 @@ export function usePrayerSettings(): UsePrayerSettingsResult {
   const [cityError, setCityError] = useState<string | null>(null);
   const [latitudeError, setLatitudeError] = useState<string | null>(null);
   const [longitudeError, setLongitudeError] = useState<string | null>(null);
+  const [utcOffsetError, setUtcOffsetError] = useState<string | null>(null);
   const [adjustError, setAdjustError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -119,6 +127,7 @@ export function usePrayerSettings(): UsePrayerSettingsResult {
         setCity(settings.cityLabel);
         setLatitudeText(formatCoordinate(settings.latitude));
         setLongitudeText(formatCoordinate(settings.longitude));
+        setUtcOffsetText(formatUtcOffsetInput(settings.utcOffsetMinutes));
         setAdjustTexts({
           fajr: String(settings.adjustments.fajr),
           dhuhr: String(settings.adjustments.dhuhr),
@@ -182,6 +191,13 @@ export function usePrayerSettings(): UsePrayerSettingsResult {
       longitude === null ? 'prayer_longitude_invalid' : validatePrayerLongitude(longitude);
     setLongitudeError(longitude === null ? longitudeValidation : null);
 
+    const utcOffsetMinutes = parseUtcOffsetInput(utcOffsetText);
+    const utcOffsetValidation =
+      utcOffsetMinutes === null
+        ? 'prayer_timezone_invalid'
+        : validateUtcOffsetMinutes(utcOffsetMinutes);
+    setUtcOffsetError(utcOffsetMinutes === null ? utcOffsetValidation : null);
+
     let adjustFailed: string | null = null;
     const adjustments: Record<PrayerName, number> = {
       fajr: 0,
@@ -204,9 +220,11 @@ export function usePrayerSettings(): UsePrayerSettingsResult {
       cityValidation === null &&
       latitudeValidation === null &&
       longitudeValidation === null &&
+      utcOffsetValidation === null &&
       adjustFailed === null &&
       latitude !== null &&
-      longitude !== null;
+      longitude !== null &&
+      utcOffsetMinutes !== null;
     if (!valid) {
       return false;
     }
@@ -219,6 +237,7 @@ export function usePrayerSettings(): UsePrayerSettingsResult {
         latitude,
         longitude,
         cityLabel: city.trim() === '' ? undefined : city,
+        utcOffsetMinutes,
         adjustments,
       });
       // Times may have changed: refresh the OS schedules so reminders keep
@@ -238,7 +257,7 @@ export function usePrayerSettings(): UsePrayerSettingsResult {
     } finally {
       setSaving(false);
     }
-  }, [saving, city, latitudeText, longitudeText, adjustTexts, method, madhab, service, t, remindersEnabled, rescheduleForToday]);
+  }, [saving, city, latitudeText, longitudeText, utcOffsetText, adjustTexts, method, madhab, service, t, remindersEnabled, rescheduleForToday]);
 
   const retryLoad = useCallback(() => {
     setLoadError(null);
@@ -339,6 +358,12 @@ export function usePrayerSettings(): UsePrayerSettingsResult {
       if (longitudeError) setLongitudeError(null);
     },
     longitudeError,
+    utcOffsetText,
+    setUtcOffsetText: (value) => {
+      setUtcOffsetText(value);
+      if (utcOffsetError) setUtcOffsetError(null);
+    },
+    utcOffsetError,
     adjustTexts,
     setAdjustText,
     adjustError,

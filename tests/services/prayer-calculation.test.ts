@@ -9,6 +9,29 @@ const DHAKA = {
 };
 
 describe('prayer calculation (adhan, offline)', () => {
+  it('calculates exact Dhaka wall times regardless of device timezone', () => {
+    // These instants are fixed astronomy; rendering through the +360 offset
+    // must yield Dhaka wall times on any device (CI runs in UTC).
+    expect(calculateDayTimes('2026-10-12', DHAKA).map((entry) => entry.time)).toEqual([
+      '04:39',
+      '11:46',
+      '15:57',
+      '17:35',
+      '18:50',
+    ]);
+  });
+
+  it('shifts wall times with the UTC offset setting', () => {
+    const utc = calculateDayTimes('2026-10-12', { ...DHAKA, utcOffsetMinutes: 0 });
+    expect(utc.map((entry) => entry.time)).toEqual([
+      '22:39',
+      '05:46',
+      '09:57',
+      '11:35',
+      '12:50',
+    ]);
+  });
+
   it('calculates five ordered wall-clock times for Dhaka', () => {
     const times = calculateDayTimes('2026-10-12', DHAKA);
 

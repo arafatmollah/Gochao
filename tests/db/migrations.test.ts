@@ -44,6 +44,7 @@ describe('migration runner', () => {
       `SELECT name FROM pragma_table_info('prayer_settings')`,
     );
     expect(prayerColumns.map((column) => column.name)).toContain('reminders_enabled');
+    expect(prayerColumns.map((column) => column.name)).toContain('utc_offset_minutes');
 
     const indexes = await db.getAllAsync<{ name: string }>(
       `SELECT name FROM sqlite_master WHERE type = 'index' AND name LIKE 'idx_%' ORDER BY name`,

@@ -379,8 +379,9 @@ Shipped from this table: `family_members`, `family_requests` (migration 006),
 `grocery_lists`, `grocery_items` (migration 007), `prayer_settings`,
 `prayer_day_times`, `prayer_logs` (migration 008), and `medicines`,
 `medicine_schedules`, `medicine_logs`, `appointments`, `health_records`
-(migration 009), `watchlist_items` (migration 010), and the prayer
-`reminders_enabled` flag (migration 011). `household_purchases`
+(migration 009), `watchlist_items` (migration 010), the prayer
+`reminders_enabled` flag (migration 011), and the prayer location UTC offset
+(migration 012). `household_purchases`
 (finance-linked purchase records) is
 deferred to the expense-recording follow-up.
 
