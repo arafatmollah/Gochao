@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -25,7 +24,6 @@ const UPCOMING_MODULES: UpcomingModule[] = [
 
 export default function MoreScreen() {
   const { t, locale, setLocale } = useTranslation();
-  const version = Constants.expoConfig?.version ?? '1.0.0';
 
   return (
     <Screen edges={['top']}>
@@ -140,6 +138,24 @@ export default function MoreScreen() {
           <Ionicons name="chevron-forward" size={IconSize.md} color={Colors.textMuted} />
         </Pressable>
 
+        <Pressable
+          onPress={() => router.push('/about')}
+          accessibilityRole="button"
+          accessibilityLabel={t('more.aboutEntry')}
+          testID="more-about-entry"
+          style={({ pressed }) => [styles.entryCard, pressed && styles.entryCardPressed]}>
+          <View style={styles.entryIcon}>
+            <Ionicons name="information-circle-outline" size={IconSize.md} color={Colors.primary} />
+          </View>
+          <View style={styles.entryBody}>
+            <AppText variant="bodyStrong">{t('more.aboutEntry')}</AppText>
+            <AppText variant="caption" color="textSecondary">
+              {t('more.aboutEntryHint')}
+            </AppText>
+          </View>
+          <Ionicons name="chevron-forward" size={IconSize.md} color={Colors.textMuted} />
+        </Pressable>
+
         <Card style={styles.card}>
           <AppText variant="subheading">{t('more.languageTitle')}</AppText>
           <AppText variant="caption" color="textSecondary">
@@ -163,19 +179,6 @@ export default function MoreScreen() {
               testID="language-bn"
             />
           </View>
-        </Card>
-
-        <Card style={styles.card}>
-          <AppText variant="subheading">{t('more.aboutTitle')}</AppText>
-          <AppText variant="caption" color="textSecondary">
-            {t('more.aboutVersion', { version })}
-          </AppText>
-          <AppText variant="caption" color="textSecondary">
-            {t('more.aboutPrivacy')}
-          </AppText>
-          <AppText variant="caption" color="textMuted">
-            {t('more.aboutSecurity')}
-          </AppText>
         </Card>
 
         <Card style={styles.card}>

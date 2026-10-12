@@ -99,21 +99,25 @@ describe('MoreScreen', () => {
     expect(mockPush).toHaveBeenCalledWith('/entertainment');
   });
 
+  it('links to the About section', async () => {
+    await render(<MoreScreen />);
+
+    expect(screen.getByTestId('more-about-entry')).toBeTruthy();
+    expect(screen.getByText('About Gochao')).toBeTruthy();
+    expect(
+      screen.getByText('Version history, terms, privacy, and contact.'),
+    ).toBeTruthy();
+
+    await fireEvent.press(screen.getByTestId('more-about-entry'));
+    expect(mockPush).toHaveBeenCalledWith('/about');
+  });
+
   it('groups language, about and roadmap content', async () => {
     await render(<MoreScreen />);
 
     expect(screen.getByText('Language')).toBeTruthy();
     expect(screen.getByTestId('language-en')).toBeTruthy();
     expect(screen.getByTestId('language-bn')).toBeTruthy();
-
-    expect(screen.getByText('About Jibon')).toBeTruthy();
-    expect(screen.getByText(/Version \d/)).toBeTruthy();
-    expect(screen.getByText('Fully offline — your data stays on this device.')).toBeTruthy();
-    expect(
-      screen.getByText(
-        'PIN lock and database encryption are not enabled yet — planned for a later phase.',
-      ),
-    ).toBeTruthy();
 
     expect(screen.getByText('Coming later')).toBeTruthy();
     expect(screen.getByText('Backup & restore')).toBeTruthy();

@@ -160,12 +160,16 @@ export default function RootLayout() {
                 <Stack.Screen name="health-note-form" options={{ presentation: 'modal' }} />
                 <Stack.Screen name="entertainment" />
                 <Stack.Screen name="entertainment-form" options={{ presentation: 'modal' }} />
+                <Stack.Screen name="about" options={{ headerShown: false }} />
+                <Stack.Screen name="about-version-history" options={{ headerShown: false }} />
+                <Stack.Screen name="about-terms" options={{ headerShown: false }} />
+                <Stack.Screen name="about-privacy" options={{ headerShown: false }} />
               </Stack>
             </I18nProvider>
           </SQLiteProvider>
           {showOverlay && (
             <View style={styles.overlay}>
-              <LoadingState label="Opening Jibon…" />
+              <LoadingState label="Opening Gochao…" />
             </View>
           )}
         </>

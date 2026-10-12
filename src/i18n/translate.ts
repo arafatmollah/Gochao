@@ -120,13 +120,13 @@ export function createTranslator(
       const english = lookupKey(fallback, candidate);
       if (english !== null) {
         if (__DEV__ && locale !== DEFAULT_LOCALE) {
-          console.warn(`[jibon] missing ${locale} translation: ${candidate}`);
+          console.warn(`[gochao] missing ${locale} translation: ${candidate}`);
         }
         return interpolate(english, params, locale);
       }
     }
     if (__DEV__) {
-      console.warn(`[jibon] missing translation key: ${key}`);
+      console.warn(`[gochao] missing translation key: ${key}`);
     }
     return key;
   };

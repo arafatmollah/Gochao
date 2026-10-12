@@ -1,9 +1,9 @@
-# Jibon — Architecture
+# Gochao — Architecture
 
 Status: reflects Phase 0/1, the Phase 2 shell and localization, the Bills & Installments and
 Personal Finance modules, and the Notes module (2026-10-12). Updated as the app evolves.
 
-Jibon is a privacy-focused, offline-first personal life management app for Android. It has no
+Gochao is a privacy-focused, offline-first personal life management app for Android. It has no
 backend, no account system, and no network dependency: all data lives in a local SQLite database
 inside the app sandbox.
 
@@ -364,7 +364,7 @@ Plain-text notes with optional categories and tags, built to the master prompt's
 1. `src/app/_layout.tsx` renders `SQLiteProvider` with `onInit={initializeDatabase}`; inside it,
    `I18nProvider` reads the language preference.
 2. `initializeDatabase` opens `jibon.db`, sets pragmas, runs pending migrations (currently 001–005).
-3. The boot overlay (“Opening Jibon…”) stays up until **both** the database is ready and the
+3. The boot overlay (“Opening Gochao…”) stays up until **both** the database is ready and the
    language preference has been resolved; then the `(tabs)` shell mounts on the Home dashboard.
 4. `useDashboard()` builds its repositories + services from `useSQLiteContext()`, materializes bill
    occurrences ahead (idempotent), and loads in parallel: today’s pending tasks (due ≤ today,

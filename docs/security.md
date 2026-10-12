@@ -1,4 +1,4 @@
-# Jibon — Security & Privacy
+# Gochao — Security & Privacy
 
 Status: **Phase 1 only.** The app lock, PIN storage, and database encryption described below are
 **not implemented yet** (they are Phase 3), and the backup/restore crypto is **not implemented yet**

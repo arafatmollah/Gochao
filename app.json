@@ -1,17 +1,18 @@
 {
   "expo": {
-    "name": "Jibon",
-    "slug": "jibon",
+    "name": "Gochao",
+    "slug": "gochao",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "jibon",
+    "scheme": "gochao",
     "userInterfaceStyle": "light",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "bundleIdentifier": "com.gochao.app"
     },
     "android": {
-      "package": "com.jibon.app",
+      "package": "com.gochao.app",
       "adaptiveIcon": {
         "backgroundColor": "#FAF7F2",
         "foregroundImage": "./assets/images/android-icon-foreground.png",

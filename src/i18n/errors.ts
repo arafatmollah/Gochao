@@ -306,7 +306,7 @@ export function translateError(error: unknown, t: TranslateFn): string {
   }
   if (__DEV__) {
     const detail = error instanceof Error ? error.message : String(error);
-    console.warn('[jibon] unexpected error:', detail);
+    console.warn('[gochao] unexpected error:', detail);
   }
   return t('errors.generic');
 }

@@ -65,13 +65,13 @@ jobs:
             exit 1
           fi
           echo "Found APK: $APK_FILE"
-          cp "$APK_FILE" build-output/Jibon.apk
+          cp "$APK_FILE" build-output/Gochao.apk
 
       - name: Upload APK as Workflow Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Jibon-Android-APK
-          path: build-output/Jibon.apk
+          name: Gochao-Android-APK
+          path: build-output/Gochao.apk
           if-no-files-found: error
 
       - name: Publish Release with APK
@@ -80,7 +80,7 @@ jobs:
         with:
           tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || 'v1.0.0' }}
           name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || 'v1.0.0' }}
-          files: build-output/Jibon.apk
+          files: build-output/Gochao.apk
           generate_release_notes: true
           draft: false
           prerelease: false

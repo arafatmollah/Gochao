@@ -1,4 +1,4 @@
-# Jibon
+# Gochao
 
 A privacy-focused, offline-first personal life management app for Android. Bilingual
 (English/Bangla), BDT-oriented, no backend: everything lives in a local SQLite database on the
@@ -13,16 +13,16 @@ Built with Expo SDK 57, React Native 0.86, TypeScript (strict), Expo Router, and
 
 ## 📲 Download for Mobile (Android)
 
-You can download and install the standalone Jibon app directly onto any Android device without Google Play Store:
+You can download and install the standalone Gochao app directly onto any Android device without Google Play Store:
 
 - **[⬇️ Download Latest Android APK](https://github.com/arafatmollah/Gochao/releases)** *(Direct download from GitHub Releases)*
-- **[📦 Download from CI Artifacts](https://github.com/arafatmollah/Gochao/actions/workflows/build-apk.yml)** *(Select the latest run and download the `Jibon-Android-APK` artifact)*
+- **[📦 Download from CI Artifacts](https://github.com/arafatmollah/Gochao/actions/workflows/build-apk.yml)** *(Select the latest run and download the `Gochao-Android-APK` artifact)*
 
 ### How to Install on Your Android Phone:
-1. Tap the download link above on your Android device to download `Jibon.apk`.
+1. Tap the download link above on your Android device to download `Gochao.apk`.
 2. Open your device's **Downloads** folder or tap the download completed notification.
 3. If prompted with *"For your security, your phone is not allowed to install unknown apps from this source"*, tap **Settings** and toggle **Allow from this source**.
-4. Tap **Install** to finish setup and launch Jibon.
+4. Tap **Install** to finish setup and launch Gochao.
 
 ---
 

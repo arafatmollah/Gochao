@@ -84,7 +84,7 @@ export function I18nProvider({ children, onReady }: I18nProviderProps) {
       .catch((error: unknown) => {
         // A missing or unreadable preference must never block the app.
         if (__DEV__) {
-          console.warn('[jibon] could not read language preference:', error);
+          console.warn('[gochao] could not read language preference:', error);
         }
       })
       .finally(() => {
@@ -111,7 +111,7 @@ export function I18nProvider({ children, onReady }: I18nProviderProps) {
       } catch (error) {
         // The in-memory switch still applies; only persistence failed.
         if (__DEV__) {
-          console.warn('[jibon] could not save language preference:', error);
+          console.warn('[gochao] could not save language preference:', error);
         }
       }
     },

@@ -1,4 +1,4 @@
-# Jibon — Implementation Status
+# Gochao — Implementation Status
 
 Snapshot: **2026-10-12**. Scope of current work per the master prompt: **Phase 0, Phase 1, and
 Phase 2** (plus a UI design-language pass — see below), the **Bills & Installments module
@@ -81,7 +81,7 @@ that visual language. What was adopted and what was consciously **not**:
   create a second payment (the “recorded exactly once” requirement); `undoPayment` reverses it
   (no-op when pending). Both are covered by race-style tests.
 - **Honesty rules implemented, not just documented**: the pay modal, the bill detail, and the
-  service source all state that Jibon records payments locally and never pays the biller or
+  service source all state that Gochao records payments locally and never pays the biller or
   contacts a bank (master prompt severity rule 13); the reminder field is labeled as a stored
   preference until OS notifications exist; deleting a bill with payments is blocked in SQL with the
   UI explaining that archiving is the alternative (rule 10).

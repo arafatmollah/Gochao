@@ -21,7 +21,7 @@ import { validatePaidAmount, validatePaidOn } from './bill-validation';
  * is UNIQUE, so an occurrence can never be counted twice in the ledger.
  *
  * Note (master prompt severity rule 13): a recorded payment is a local
- * record only. Jibon never contacts the biller and never claims the bill was
+ * record only. Gochao never contacts the biller and never claims the bill was
  * paid through an external provider.
  */
 export interface BillPaymentServiceDeps {

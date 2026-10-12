@@ -1,4 +1,4 @@
-# Jibon — Database Schema
+# Gochao — Database Schema
 
 Status: migrations **001–005** are implemented and tested (`src/db/migrations/`).
 Successor migrations are planned for their respective phases and are **not** created yet. Nothing

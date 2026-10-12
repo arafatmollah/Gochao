@@ -88,7 +88,7 @@ describe('BillPayScreen', () => {
     await render(<BillPayScreen />);
 
     expect(
-      screen.getByText('Jibon only records this payment on this device — it does not pay the biller.'),
+      screen.getByText('Gochao only records this payment on this device — it does not pay the biller.'),
     ).toBeTruthy();
     expect(screen.getByText('Internet')).toBeTruthy();
     expect(screen.getByText('Expected ৳1,250')).toBeTruthy();

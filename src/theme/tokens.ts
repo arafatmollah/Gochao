@@ -1,7 +1,7 @@
 import type { TextStyle } from 'react-native';
 
 /**
- * Jibon design tokens.
+ * Gochao design tokens.
  *
  * Visual direction (master prompt §8 + the approved reference design):
  * warm off-white background, dark readable text, muted forest/teal-green
