@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { router } from 'expo-router';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/app-text';
 import { Badge } from '@/components/badge';
@@ -9,7 +10,7 @@ import { Chip } from '@/components/chip';
 import { Screen } from '@/components/screen';
 import { ScreenHeader } from '@/components/screen-header';
 import { useTranslation } from '@/i18n';
-import { Colors, IconSize, Spacing } from '@/theme/tokens';
+import { Colors, CardShadow, IconSize, Radius, Spacing } from '@/theme/tokens';
 
 interface UpcomingModule {
   key: string;
@@ -19,11 +20,6 @@ interface UpcomingModule {
 }
 
 const UPCOMING_MODULES: UpcomingModule[] = [
-  { key: 'notes', icon: 'document-text-outline', phase: 4 },
-  { key: 'family', icon: 'people-outline', phase: 7 },
-  { key: 'grocery', icon: 'cart-outline', phase: 7 },
-  { key: 'health', icon: 'medkit-outline', phase: 8 },
-  { key: 'prayer', icon: 'moon-outline', phase: 8 },
   { key: 'backup', icon: 'cloud-download-outline', phase: 9 },
 ];
 
@@ -36,6 +32,114 @@ export default function MoreScreen() {
       <ScreenHeader kicker={t('more.kicker')} title={t('more.title')} testID="more-header" />
 
       <ScrollView contentContainerStyle={styles.content}>
+        <Pressable
+          onPress={() => router.push('/family')}
+          accessibilityRole="button"
+          accessibilityLabel={t('more.familyEntry')}
+          testID="more-family-entry"
+          style={({ pressed }) => [styles.entryCard, pressed && styles.entryCardPressed]}>
+          <View style={styles.entryIcon}>
+            <Ionicons name="people-outline" size={IconSize.md} color={Colors.primary} />
+          </View>
+          <View style={styles.entryBody}>
+            <AppText variant="bodyStrong">{t('more.familyEntry')}</AppText>
+            <AppText variant="caption" color="textSecondary">
+              {t('more.familyEntryHint')}
+            </AppText>
+          </View>
+          <Ionicons name="chevron-forward" size={IconSize.md} color={Colors.textMuted} />
+        </Pressable>
+
+        <Pressable
+          onPress={() => router.push('/notes')}
+          accessibilityRole="button"
+          accessibilityLabel={t('more.notesEntry')}
+          testID="more-notes-entry"
+          style={({ pressed }) => [styles.entryCard, pressed && styles.entryCardPressed]}>
+          <View style={styles.entryIcon}>
+            <Ionicons name="document-text-outline" size={IconSize.md} color={Colors.primary} />
+          </View>
+          <View style={styles.entryBody}>
+            <AppText variant="bodyStrong">{t('more.notesEntry')}</AppText>
+            <AppText variant="caption" color="textSecondary">
+              {t('more.notesEntryHint')}
+            </AppText>
+          </View>
+          <Ionicons name="chevron-forward" size={IconSize.md} color={Colors.textMuted} />
+        </Pressable>
+
+        <Pressable
+          onPress={() => router.push('/grocery')}
+          accessibilityRole="button"
+          accessibilityLabel={t('more.groceryEntry')}
+          testID="more-grocery-entry"
+          style={({ pressed }) => [styles.entryCard, pressed && styles.entryCardPressed]}>
+          <View style={styles.entryIcon}>
+            <Ionicons name="cart-outline" size={IconSize.md} color={Colors.primary} />
+          </View>
+          <View style={styles.entryBody}>
+            <AppText variant="bodyStrong">{t('more.groceryEntry')}</AppText>
+            <AppText variant="caption" color="textSecondary">
+              {t('more.groceryEntryHint')}
+            </AppText>
+          </View>
+          <Ionicons name="chevron-forward" size={IconSize.md} color={Colors.textMuted} />
+        </Pressable>
+
+        <Pressable
+          onPress={() => router.push('/prayer')}
+          accessibilityRole="button"
+          accessibilityLabel={t('more.prayerEntry')}
+          testID="more-prayer-entry"
+          style={({ pressed }) => [styles.entryCard, pressed && styles.entryCardPressed]}>
+          <View style={styles.entryIcon}>
+            <Ionicons name="moon-outline" size={IconSize.md} color={Colors.primary} />
+          </View>
+          <View style={styles.entryBody}>
+            <AppText variant="bodyStrong">{t('more.prayerEntry')}</AppText>
+            <AppText variant="caption" color="textSecondary">
+              {t('more.prayerEntryHint')}
+            </AppText>
+          </View>
+          <Ionicons name="chevron-forward" size={IconSize.md} color={Colors.textMuted} />
+        </Pressable>
+
+        <Pressable
+          onPress={() => router.push('/health')}
+          accessibilityRole="button"
+          accessibilityLabel={t('more.healthEntry')}
+          testID="more-health-entry"
+          style={({ pressed }) => [styles.entryCard, pressed && styles.entryCardPressed]}>
+          <View style={styles.entryIcon}>
+            <Ionicons name="medkit-outline" size={IconSize.md} color={Colors.primary} />
+          </View>
+          <View style={styles.entryBody}>
+            <AppText variant="bodyStrong">{t('more.healthEntry')}</AppText>
+            <AppText variant="caption" color="textSecondary">
+              {t('more.healthEntryHint')}
+            </AppText>
+          </View>
+          <Ionicons name="chevron-forward" size={IconSize.md} color={Colors.textMuted} />
+        </Pressable>
+
+        <Pressable
+          onPress={() => router.push('/entertainment')}
+          accessibilityRole="button"
+          accessibilityLabel={t('more.entertainmentEntry')}
+          testID="more-entertainment-entry"
+          style={({ pressed }) => [styles.entryCard, pressed && styles.entryCardPressed]}>
+          <View style={styles.entryIcon}>
+            <Ionicons name="film-outline" size={IconSize.md} color={Colors.primary} />
+          </View>
+          <View style={styles.entryBody}>
+            <AppText variant="bodyStrong">{t('more.entertainmentEntry')}</AppText>
+            <AppText variant="caption" color="textSecondary">
+              {t('more.entertainmentEntryHint')}
+            </AppText>
+          </View>
+          <Ionicons name="chevron-forward" size={IconSize.md} color={Colors.textMuted} />
+        </Pressable>
+
         <Card style={styles.card}>
           <AppText variant="subheading">{t('more.languageTitle')}</AppText>
           <AppText variant="caption" color="textSecondary">
@@ -108,6 +212,30 @@ const styles = StyleSheet.create({
   },
   card: {
     gap: Spacing.xs,
+  },
+  entryCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.lg,
+    padding: Spacing.lg,
+    ...CardShadow,
+  },
+  entryCardPressed: {
+    backgroundColor: Colors.surfaceMuted,
+  },
+  entryIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  entryBody: {
+    flex: 1,
+    gap: 2,
   },
   languageRow: {
     flexDirection: 'row',

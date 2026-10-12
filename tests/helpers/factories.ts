@@ -10,6 +10,10 @@ import type {
   Transaction,
   Transfer,
 } from '@/types/finance';
+import type { FamilyRequestListItem } from '@/types/family';
+import type { DueDose } from '@/types/health';
+import type { NoteListItem } from '@/types/note';
+import type { PrayerDay } from '@/types/prayer';
 import type { Task } from '@/types/task';
 
 const BASE_TIMESTAMP = '2026-10-11T05:00:00.000Z';
@@ -23,6 +27,7 @@ export function makeTask(overrides: Partial<Task> = {}): Task {
     priority: overrides.priority ?? 'medium',
     status: overrides.status ?? 'pending',
     parentTaskId: overrides.parentTaskId ?? null,
+    familyRequestId: overrides.familyRequestId ?? null,
     createdAt: overrides.createdAt ?? BASE_TIMESTAMP,
     updatedAt: overrides.updatedAt ?? BASE_TIMESTAMP,
     completedAt:
@@ -186,5 +191,67 @@ export function makeActivityRow(overrides: Partial<ActivityRow> = {}): ActivityR
     notes: overrides.notes ?? null,
     billOccurrenceId: overrides.billOccurrenceId ?? null,
     createdAt: overrides.createdAt ?? BASE_TIMESTAMP,
+  };
+}
+
+export function makeFamilyRequestListItem(
+  overrides: Partial<FamilyRequestListItem> = {},
+): FamilyRequestListItem {
+  return {
+    id: overrides.id ?? 'req-1',
+    title: overrides.title ?? 'Buy medicine for father',
+    details: overrides.details ?? null,
+    memberId: overrides.memberId ?? null,
+    category: overrides.category ?? 'medicine',
+    priority: overrides.priority ?? 'medium',
+    deadline: overrides.deadline ?? null,
+    estimatedCostMinor: overrides.estimatedCostMinor ?? null,
+    status: overrides.status ?? 'open',
+    createdAt: overrides.createdAt ?? BASE_TIMESTAMP,
+    updatedAt: overrides.updatedAt ?? BASE_TIMESTAMP,
+    memberName: overrides.memberName ?? null,
+    taskId: overrides.taskId ?? null,
+  };
+}
+
+export function makeNote(overrides: Partial<NoteListItem> = {}): NoteListItem {
+
+  return {
+    id: overrides.id ?? 'note-1',
+    title: overrides.title ?? 'Grocery list',
+    content: overrides.content ?? 'Rice, oil, onions',
+    categoryId: overrides.categoryId ?? null,
+    isPinned: overrides.isPinned ?? false,
+    createdAt: overrides.createdAt ?? BASE_TIMESTAMP,
+    updatedAt: overrides.updatedAt ?? BASE_TIMESTAMP,
+    categoryName: overrides.categoryName ?? null,
+    tags: overrides.tags ?? [],
+  };
+}
+
+export function makePrayerDay(overrides: Partial<PrayerDay> = {}): PrayerDay {
+
+  return {
+    date: overrides.date ?? '2026-10-11',
+    prayers: overrides.prayers ?? [
+      { prayer: 'fajr', time: '04:45', status: 'prayed' },
+      { prayer: 'dhuhr', time: '12:00', status: null },
+      { prayer: 'asr', time: '15:30', status: null },
+      { prayer: 'maghrib', time: '18:10', status: null },
+      { prayer: 'isha', time: '19:30', status: null },
+    ],
+  };
+}
+
+export function makeDueDose(overrides: Partial<DueDose> = {}): DueDose {
+
+  return {
+    scheduleId: overrides.scheduleId ?? 'sch-1',
+    medicineId: overrides.medicineId ?? 'med-1',
+    medicineName: overrides.medicineName ?? 'Napa',
+    dosage: overrides.dosage ?? '1 tablet',
+    time: overrides.time ?? '08:00',
+    date: overrides.date ?? '2026-10-11',
+    status: overrides.status ?? null,
   };
 }

@@ -10,6 +10,7 @@ export interface QuickActionsProps {
   onAddIncome: () => void;
   onAddExpense: () => void;
   onViewBills: () => void;
+  onAddFamilyRequest: () => void;
   testID?: string;
 }
 
@@ -22,6 +23,7 @@ export function QuickActions({
   onAddIncome,
   onAddExpense,
   onViewBills,
+  onAddFamilyRequest,
   testID,
 }: QuickActionsProps) {
   const { t } = useTranslation();
@@ -58,6 +60,14 @@ export function QuickActions({
         backgroundColor={Colors.accentPurpleSoft}
         onPress={onViewBills}
         testID="quick-view-bills"
+      />
+      <QuickAction
+        icon="people-outline"
+        label={t('dashboard.quickFamily')}
+        color={Colors.accentGold}
+        backgroundColor={Colors.accentGoldSoft}
+        onPress={onAddFamilyRequest}
+        testID="quick-add-family-request"
       />
     </View>
   );

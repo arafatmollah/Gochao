@@ -1,8 +1,10 @@
 import {
+  formatCountdownHMS,
   formatIsoDateDisplay,
   formatIsoDateRelative,
   formatIsoDateWeekday,
   formatMoney,
+  formatWallClock12,
   greetingKeyForHour,
 } from '@/i18n/format';
 import bnDict from '@/i18n/locales/bn.json';
@@ -55,6 +57,40 @@ describe('date display formatting', () => {
     expect(formatIsoDateRelative('2026-10-10', today, en)).toBe('Yesterday');
     expect(formatIsoDateRelative('2026-10-20', today, en)).toBe('October 20, 2026');
     expect(formatIsoDateRelative(today, today, bn)).toBe('আজ');
+  });
+});
+
+describe('formatCountdownHMS', () => {
+  it('formats second counts as HH:MM:SS', () => {
+    expect(formatCountdownHMS(7200, 'en')).toBe('02:00:00');
+    expect(formatCountdownHMS(7384, 'en')).toBe('02:03:04');
+    expect(formatCountdownHMS(59, 'en')).toBe('00:00:59');
+    expect(formatCountdownHMS(0, 'en')).toBe('00:00:00');
+  });
+
+  it('clamps negatives and localizes digits', () => {
+    expect(formatCountdownHMS(-5, 'en')).toBe('00:00:00');
+    expect(formatCountdownHMS(3661, 'bn')).toBe('০১:০১:০১');
+  });
+});
+
+describe('formatWallClock12', () => {
+
+  it('converts 24-hour wall-clock times to 12-hour time', () => {
+    expect(formatWallClock12('04:45', 'en')).toBe('4:45 AM');
+    expect(formatWallClock12('12:00', 'en')).toBe('12:00 PM');
+    expect(formatWallClock12('15:30', 'en')).toBe('3:30 PM');
+    expect(formatWallClock12('00:05', 'en')).toBe('12:05 AM');
+    expect(formatWallClock12('23:59', 'en')).toBe('11:59 PM');
+  });
+
+  it('localizes digits per locale', () => {
+    expect(formatWallClock12('18:10', 'bn')).toBe('৬:১০ PM');
+  });
+
+  it('returns invalid input unchanged', () => {
+    expect(formatWallClock12('25:00', 'en')).toBe('25:00');
+    expect(formatWallClock12('nope', 'en')).toBe('nope');
   });
 });
 

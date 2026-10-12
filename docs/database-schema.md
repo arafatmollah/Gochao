@@ -1,6 +1,6 @@
 # Jibon — Database Schema
 
-Status: migrations **001–004** are implemented and tested (`src/db/migrations/`).
+Status: migrations **001–005** are implemented and tested (`src/db/migrations/`).
 Successor migrations are planned for their respective phases and are **not** created yet. Nothing
 in this document claims otherwise.
 
@@ -298,6 +298,71 @@ CREATE TABLE budgets (
 - **`ON DELETE RESTRICT`** keeps history safe: a category holding a budget, or an account named in
   a transfer, cannot be deleted silently — the service offers archive instead.
 
+## Migration 005 — `notes` (implemented)
+
+Source of truth: `src/db/migrations/005-notes.ts`. Notes (Module C) with categories and tags.
+
+```sql
+CREATE TABLE note_categories (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL CHECK (length(trim(name)) > 0),
+  created_at TEXT NOT NULL
+);
+CREATE UNIQUE INDEX idx_note_categories_name ON note_categories (name COLLATE NOCASE);
+
+CREATE TABLE notes (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL DEFAULT '',
+  content TEXT NOT NULL DEFAULT '',
+  category_id TEXT REFERENCES note_categories(id) ON DELETE SET NULL,
+  is_pinned INTEGER NOT NULL DEFAULT 0 CHECK (is_pinned IN (0, 1)),
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  CHECK (length(trim(title)) > 0 OR length(trim(content)) > 0)
+);
+CREATE INDEX idx_notes_pinned_updated ON notes (is_pinned DESC, updated_at DESC);
+CREATE INDEX idx_notes_category ON notes (category_id);
+
+CREATE TABLE tags (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL CHECK (length(trim(name)) > 0),
+  created_at TEXT NOT NULL
+);
+CREATE UNIQUE INDEX idx_tags_name ON tags (name COLLATE NOCASE);
+
+CREATE TABLE note_tags (
+  note_id TEXT NOT NULL REFERENCES notes(id) ON DELETE CASCADE,
+  tag_id TEXT NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
+  PRIMARY KEY (note_id, tag_id)
+);
+CREATE INDEX idx_note_tags_tag ON note_tags (tag_id);
+```
+
+### Notes on the notes tables
+
+- **A note is a title, a body, or both.** The table-level `CHECK` requires at least one non-blank
+  field, so the service's `note_empty` validation is backed by the schema — a blank note cannot be
+  inserted by any future code path either. Unlike `tasks.title`, `title`/`content` allow empty
+  strings (individually); the service still trims before writing.
+- **Plain text, extensible model.** No HTML/Markdown columns in this phase (master prompt Module C
+  declares plain text for the MVP with rich formatting later); the columns are unconstrained
+  `TEXT` (length limits: 120 chars title / 20,000 chars body, enforced at the service layer) so a
+  later `format` column can be added additively.
+- **Category deletion keeps notes.** `ON DELETE SET NULL`: removing a category must not destroy
+  the user's notes (rule 9/10 spirit); the note simply becomes uncategorized. Category names are
+  unique case-insensitively.
+- **Tag links cascade both ways.** Deleting a note removes its tag links; deleting a tag removes
+  its links. The `tags` row itself survives (an unused tag is harmless and can be reused);
+  `deleteTagIfUnused` exists for housekeeping but the UI never deletes tags automatically — no
+  user data is removed silently (rule 9).
+- **"Pinned first, then most recently modified" is one index.** `idx_notes_pinned_updated
+  (is_pinned DESC, updated_at DESC)` backs the default list ORDER BY directly. Pinning writes
+  `is_pinned` only — it never bumps `updated_at`, so pinning does not masquerade as a modification
+  (the list's "Updated …" date stays honest; covered by repository and service tests).
+- **Search is parameterized LIKE with escaping.** `title LIKE ? OR content LIKE ?` with
+  `ESCAPE '\'` and a service-side pattern that escapes `\`, `%`, `_` — a note titled `100% done`
+  is found by typing `100%` and does not act as a wildcard (rule 8; tested).
+
 ## Planned migrations (not yet implemented)
 
 Per the product plan (master prompt §6); each lands with its feature phase. Version numbers are
@@ -306,12 +371,18 @@ below names contents, not fixed numbers:
 
 | Contents | Phase |
 | --- | --- |
-| `notes` | 4 |
-| `family_members`, `family_requests` | 7 |
-| `grocery_lists`, `grocery_items`, `household_purchases` | 7 |
 | `medicines`, `medicine_schedules`, `medicine_logs`, `appointments`, `health_records` | 8 |
 | `prayer_settings`, `prayer_logs` | 8 |
 | `reminder_metadata`, `attachments` | J / later phases |
+
+Shipped from this table: `family_members`, `family_requests` (migration 006),
+`grocery_lists`, `grocery_items` (migration 007), `prayer_settings`,
+`prayer_day_times`, `prayer_logs` (migration 008), and `medicines`,
+`medicine_schedules`, `medicine_logs`, `appointments`, `health_records`
+(migration 009), `watchlist_items` (migration 010), and the prayer
+`reminders_enabled` flag (migration 011). `household_purchases`
+(finance-linked purchase records) is
+deferred to the expense-recording follow-up.
 
 Planned indexes from the master prompt (added with their tables): family request status+due date,
 medicine schedule active status. (Transactions’ date, account+date, and category+date indexes are
@@ -331,11 +402,13 @@ Design rules that will apply to those migrations:
 - All statements are parameterized (`?` placeholders) through `SqlDatabase`; the only interpolation
   is the validated `PRAGMA user_version` integer.
 - LIKE search patterns are escaped for `\`, `%`, `_` and used with `ESCAPE '\'`, so a task titled
-  `50%` is searchable literally (`src/db/sql.ts:escapeLikePattern`).
-- Multi-step operations use exclusive transactions. Currently: migrations and bill payment
-  recording (payment + linked expense, or undo + reversal). Bill schedule materialization and
-  transfers are deliberately single guarded/idempotent statements instead (a transfer is one row,
-  so the write is atomic by nature — see Migration 004 notes).
+  `50%` (or a note titled `100% done`) is searchable literally (`src/db/sql.ts:escapeLikePattern`
+  and the note repository's `likePattern`).
+- Multi-step operations use exclusive transactions. Currently: migrations, bill payment recording
+  (payment + linked expense, or undo + reversal), and note create/update with tag links (note write
+  + link replacement in one transaction). Bill schedule materialization and transfers are
+  deliberately single guarded/idempotent statements instead (a transfer is one row, so the write is
+  atomic by nature — see Migration 004 notes).
 - Persistence across restarts is covered by `tests/db/persistence.test.ts`: it writes to a temp
   file database, closes it, reopens it, re-runs migrations (no-op), and verifies the data.
 

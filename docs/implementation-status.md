@@ -1,9 +1,10 @@
 # Jibon — Implementation Status
 
-Snapshot: **2026-10-11**. Scope of current work per the master prompt: **Phase 0, Phase 1, and
+Snapshot: **2026-10-12**. Scope of current work per the master prompt: **Phase 0, Phase 1, and
 Phase 2** (plus a UI design-language pass — see below), the **Bills & Installments module
-(master prompt Module E / roadmap “Phase 6”)**, and the **Personal Finance module (master prompt
-Module D — আয়-ব্যয় / roadmap “Phase 5”)**, each built next at the user’s request.
+(master prompt Module E / roadmap “Phase 6”)**, the **Personal Finance module (master prompt
+Module D — আয়-ব্যয় / roadmap “Phase 5”)**, and the **Notes module (master prompt Module C — নোট /
+roadmap “Phase 4”)**, each built at the user’s request.
 
 ## Phase checklist
 
@@ -14,8 +15,9 @@ Module D — আয়-ব্যয় / roadmap “Phase 5”)**, each built ne
 | 2 — Localization and application shell | ✅ Done (code) / ✅ live-run verified on web | i18n (en/bn) with persisted language preference, bottom tabs, Home dashboard from real DB data, More screen; acceptance criterion “all implemented UI is localizable and navigable” checked below |
 | Module E — Bills & Installments (roadmap Phase 6) | ✅ Done (code) / ✅ live-run verified on web | Built out of roadmap order at the user’s request. Migration 002, services, UI (tab + 4 screens), dashboard preview; full flow live-verified 2026-10-11 — see the live-run account |
 | **Module D — Personal Finance (আয়-ব্যয়, roadmap Phase 5)** | ✅ Done (code) / ✅ live-run verified on web | Built out of roadmap order at the user’s request. Migrations 003–004, five repositories + five services, UI (tab + 9 screens), bill-payment → expense integration, dashboard money card + quick actions. All ten §14 financial-correctness tests pass — mapping below; flow live-verified 2026-10-11 |
+| **Module C — Notes (নোট, roadmap Phase 4)** | ✅ Done (code) / ✅ live-run verified on web | Built at the user’s request. Migration 005 (`notes`, `note_categories`, `tags`, `note_tags`), note repository + service, Notes screen + note form (pin, tags, categories, search), More entry card, dashboard notes preview. Create/search/pin/edit/delete verified live 2026-10-12 — account below |
 | 3 — App lock and security foundation | ⬜ Not started | Plan and verified constraints are documented in `docs/security.md` (incl. SQLCipher findings) |
-| 4, 7–10 | ⬜ Not started | Bills (Phase 6) and finance (Phase 5) are the exceptions and are complete |
+| 7–10 | ⬜ Not started | Bills (Phase 6), finance (Phase 5), and notes (Phase 4) are the exceptions and are complete |
 
 ## UI design language (adopted 2026-10-11)
 
@@ -26,7 +28,8 @@ that visual language. What was adopted and what was consciously **not**:
   overdue/due-today columns, gold/purple accents, round quick actions, two-line kicker+title screen
   headers, bottom tab bar with an active pill, generous radii.
 - **Only real modules get UI.** The reference has five tabs (হোম/আয়-ব্যয়/বাজার/ভাড়াটিয়া/আরও);
-  **আয়-ব্যয় (finance) and বিল (bills) are now real**; grocery/tenants arrive with Phases 6–7.
+  **আয়-ব্যয় (finance), বিল (bills), and বাজার (grocery, core lists + items) are now real**;
+  tenants arrive later.
   Shipping them now would mean dead tabs and fake data, which the master prompt forbids.
   Shipped tabs: **হোম (Home) / কাজ (Tasks) / বিল (Bills) / আয়-ব্যয় (Finance) / আরও (More)**.
   The More screen lists the remaining upcoming modules with their phases, clearly labeled as not
@@ -133,6 +136,33 @@ that visual language. What was adopted and what was consciously **not**:
   balance can treat them as income/expense (rule 11); money is integer minor units end-to-end
   (rule 7); balances are always derived, never stored (rule 6).
 
+### Notes (Module C — নোট, built 2026-10-12)
+
+- **Migration 005** (see `docs/database-schema.md`): `notes` (title/content with an
+  at-least-one-non-blank CHECK, `category_id ON DELETE SET NULL`, `is_pinned` CHECK),
+  `note_categories` + `tags` (case-insensitive unique names), `note_tags` (composite PK, cascades
+  both ways), and the `pinned-first → recently-modified` composite index.
+- **`SqliteNoteRepository`**: parameterized SQL only; list query composes LIKE search
+  (title + body, escaped `\ % _` with `ESCAPE '\'`), category filter, and optional limit;
+  `ORDER BY is_pinned DESC, updated_at DESC`; tags attached in one grouped follow-up query (no
+  N+1). `setPinned` writes only `is_pinned` — pinning never rewrites `updated_at`. Note create and
+  update write the note **and** replace its tag links inside one exclusive transaction.
+- **`createNoteService`**: validation with stable codes (`note-validation.ts` — non-blank body,
+  title ≤ 120, content ≤ 20,000, category/tag name limits), trimming, case-insensitive tag
+  dedupe + create-on-first-use, category create/rename-free management with a
+  `note_category_name_taken` conflict, note delete, pin toggle, missing-record `not_found` errors.
+- **UI**: `/notes` (search field debounced 250 ms, horizontal category chips, pinned-first list of
+  note cards with category badge + `#tags` + localized "Updated" date, empty vs no-match states,
+  FAB), `/note-form` (title/content, category chips + create-new inline, tag chips + enter-to-add,
+  pin toggle, created/updated dates in edit mode, destructive delete confirmation). The validation
+  banner clears as soon as the user edits the note text.
+- **Integration**: the More screen leads with a **Notes entry card** (Notes left the "coming
+  later" roadmap — no dead links), and the dashboard shows up to **3 most recently modified
+  notes** with pin toggles and an "All notes" link (hidden when none — real data only, rule 6).
+- **Plain text, deliberately**: no rich formatting in this phase (Module C MVP); the model is
+  extensible additively. The plain-text MVP satisfies the phase completion criterion
+  "notes remain persistent and searchable offline" — verified live (below).
+
 ### Internationalization (`src/i18n/`)
 
 - Lightweight homegrown i18n (a “compatible alternative” to i18next, which §9 allows): pure
@@ -154,9 +184,9 @@ that visual language. What was adopted and what was consciously **not**:
 - **Tasks screen**: search (debounced 250 ms), status/priority filters, sections (Overdue / Due
   today / Upcoming / No due date / Recently completed), overdue count, pagination for completed,
   distinct empty states, error state with retry, action-error banner.
-- **More screen**: language switch (English / বাংলা), about card (version, privacy statement, and an
-  honest note that PIN lock and database encryption are not enabled yet), upcoming-modules list with
-  phase badges.
+- **More screen**: notes entry card at the top (live module), language switch (English / বাংলা),
+  about card (version, privacy statement, and an honest note that PIN lock and database encryption
+  are not enabled yet), upcoming-modules list with phase badges.
 - **Add/edit modal**: fully localized; title, description, priority chips, due quick picks + native
   date picker, validation messages, delete with destructive confirmation.
 - **Bills tab** (`/bills`): three segments — **বাকি/Due** (grouped Overdue / Today / Next 7 days /
@@ -177,7 +207,9 @@ that visual language. What was adopted and what was consciously **not**:
 - **Record payment** (`/bill-pay`, modal): disclaimer banner, occurrence context, prefilled
   expected amount and today’s date, quick date chips, validation, idempotent submit.
 - **Home dashboard**: quick actions gained **Bills**; an **Upcoming bills** section shows the
-  nearest pending occurrences (real data, hidden when none) with a See-all link.
+  nearest pending occurrences (real data, hidden when none) with a See-all link; a **Notes**
+  section shows the up-to-3 most recently modified notes (pin toggle, opens the note form) with an
+  "All notes" link, hidden when nothing has been written yet.
 - All new strings ship in both dictionaries (parity-test enforced), including money formatting in
   Bangla numerals (৳১,২৫০).
 - All pre-Phase-2 strings were extracted (search, filters, empty/error states, banners, a11y
@@ -185,16 +217,16 @@ that visual language. What was adopted and what was consciously **not**:
   before i18n is up) and platform-native UI (browser/Alert confirm buttons, the Android date
   picker dialog).
 
-## Verification evidence (commands run on this machine, 2026-10-11)
+## Verification evidence (commands run on this machine, 2026-10-12)
 
 | Check | Command | Result |
 | --- | --- | --- |
-| TypeScript | `npx tsc --noEmit` | ✅ Exit 0, no errors (typed routes regenerated via `expo start` for all new routes) |
+| TypeScript | `npx tsc --noEmit` | ✅ Exit 0, no errors (typed routes regenerated via `expo start` for all new routes incl. `/notes`, `/note-form`) |
 | Lint | `npx eslint .` | ✅ 0 errors; remaining warnings are the pre-existing test-file `import/first` pattern after `jest.mock` (unavoidable and expected) — `src/` is warning-free |
-| Tests | `npx jest` | ✅ 32 suites, **329/329 tests pass** |
-| Web bundle | `npx expo export` (web) | ✅ 19 static routes incl. all finance screens (`/finance`, `/finance-accounts`, `/account-form`, `/finance-transactions`, `/transaction-form`, `/finance-transfer`, `/finance-budgets`, `/budget-form`, `/finance-reports`, `/finance-categories`, `/category-form`) + WASM SQLite worker chunk |
-| Android bundle | `npx expo export --platform android` | ✅ Hermes bytecode bundle (`entry-*.hbc`, 3.7 MB) |
-| Live run (web) | static serve of `dist/` + browser automation | ✅ Phase 2, bills, **and finance** flows exercised against a real persisted database — account below |
+| Tests | `npx jest` | ✅ 36 suites, **363/363 tests pass** (incl. 31 new notes tests) |
+| Web bundle | `npx expo export` (all platforms) | ✅ 21 static app routes incl. the new `/notes` and `/note-form`, all finance screens, and the WASM SQLite worker chunk; iOS + Android bundles emitted |
+| Android bundle | `npx expo export --platform android` (inside the all-platform export) | ✅ Hermes bytecode bundle (`entry-*.hbc`) |
+| Live run (web) | static serve of `dist/` with COOP/COEP headers + browser automation | ✅ Phase 2, bills, finance, **and notes** flows exercised against a real persisted database — account below |
 
 Test suites: migrations (fresh/idempotent/rollback/validation, incl. the bills and finance
 tables/indexes/seed), task repository (roundtrip, ordering, filters, search escaping, pagination,
@@ -216,15 +248,21 @@ recurrence utils (stepping, clamping, horizon), money utils (parsing/formatting 
 digits), grouping (pure, tasks + bill due sections), dashboard summary + finance summary (pure),
 dates utils (incl. local-day UTC bounds and month/year key helpers), i18n (dictionary
 parity, plural/interpolation/digits, fallback, format helpers incl. `formatMoney`, validation-code
-translation incl. bill **and finance** codes, locale parsing), settings repository (real SQLite),
-UI components (TaskItem, TextField), and the screens: Tasks, Dashboard (incl. bills preview and
-the money card), More, Bills (segments/sections/navigation/empty/error), the bill form
-(create/edit/delete-confirm), the bill pay screen (disclaimer, prefill, submit, validation),
-**Finance** (overview figures/nav/empty states, accounts management, transactions list with month
-totals, reports incl. derived shares + budget/account summaries + range switching, budgets list +
-form incl. all-budgeted guard, transaction form incl. the bill-locked banner, transfer form incl.
-the same-account guard), and the language-switch flow (provider + real SQLite: switch, persist,
-reload, failure-tolerant ready).
+translation incl. bill, finance **and note** codes, locale parsing), settings repository (real
+SQLite), **note repository** (roundtrip with category + tags, pinned-then-modified ordering, search
+incl. wildcard escaping, category filter + counts, pin leaving `updated_at` untouched, tag-link
+cascades, category delete keeping notes, tag replacement), **note service** (validation codes,
+clock/ID injection, tag dedupe, category conflicts, missing-record errors), UI components
+(TaskItem, TextField, NoteCard), and the screens: Tasks, Dashboard (incl. bills preview, the money
+card **and the notes preview**), More (incl. the notes entry card), Bills (segments/sections/
+navigation/empty/error), the bill form (create/edit/delete-confirm), the bill pay screen
+(disclaimer, prefill, submit, validation), **Finance** (overview figures/nav/empty states, accounts
+management, transactions list with month totals, reports incl. derived shares + budget/account
+summaries + range switching, budgets list + form incl. all-budgeted guard, transaction form incl.
+the bill-locked banner, transfer form incl. the same-account guard), **the notes screen
+(list/search/category filters/empty states/pin/navigation) and the note form (create/edit/
+delete-confirm, loading/error states, category+tag+pin interactions)**, and the language-switch
+flow (provider + real SQLite: switch, persist, reload, failure-tolerant ready).
 
 **These tests run against real SQLite** (Node's built-in `node:sqlite`) executing the same SQL and
 migrations as the device — the database tests are not mocked.
@@ -329,6 +367,37 @@ persisted database:
    ৳5,000, expenses ৳1,250, net ৳3,750, “Spent today ৳1,250”, “Total balance ৳9,750”) plus the new
    **Add income / Add expense** quick actions; no console errors during the session.
 
+### Notes module live run (2026-10-12, same build pipeline)
+
+Executed against the exported web build served with the isolation headers, in the persisted Bangla
+profile (the app remembered বাংলা from the earlier session — proof of the persisted language
+preference), using browser automation:
+
+1. **Notes screen** opened on its Bangla empty state (“এখনো কোনো নোট নেই”) with search, FAB, and
+   the empty-state action button — all localized.
+2. **Empty-save is rejected honestly**: pressing সংরক্ষণ with no content showed the inline
+   validation banner (“একটি শিরোনাম বা নোটের লেখা যোগ করুন।”) and stayed on the form; nothing was
+   written.
+3. **Created a note** (“বাজারের তালিকা”, body “চাল, তেল, পেঁয়াজ, ডাল — শনিবার কিনতে হবে।”), created
+   a new category সংসার inline (chip appeared, input cleared), typed a tag খরচ and pressed enter
+   (custom chip appeared), toggled **পিন**, saved → back on the list, where the card rendered
+   title, snippet, category badge, `#খরচ`, and “হালনাগাদ ১২ অক্টোবর ২০২৬” (Bangla digits) with an
+   active pin control.
+4. **Search works against content, not just titles**: typing “তেল” (appears only in the body)
+   kept the note listed; a nonsense term showed the “মিলে যাওয়া নোট নেই” no-match state.
+5. **Persistence across reloads** (the phase completion criterion): a full page reload — fresh JS
+   boot, database re-opened from OPFS — still listed the note with category, tag, and pin intact.
+6. **Pin from the list** toggled the control’s state and label; the displayed “Updated” date did
+   not change (pinning is not a modification — matches the DB-level tests).
+7. **Dashboard integration**: the Home screen showed the নোট section (count ১) with the note card
+   and a “সব নোট” link; **More** led with the নোট entry card and no longer lists Notes in the
+   “পরে আসছে” roadmap.
+8. **Edit flow**: opening the note pre-filled everything and showed “তৈরি …” / “হালনাগাদ …” dates;
+   editing the body and saving updated the list immediately.
+9. **Delete flow**: “নোট মুছুন” raised a confirmation dialog; accepting deleted the note — the
+   list returned to its empty state **after another reload** (deletion persisted; the সংসার
+   category chip correctly survived with its note detached). No console errors during the session.
+
 ## Phase 2 acceptance (master prompt §16) — honest status
 
 Criterion: “all implemented UI is localizable and navigable.”
@@ -346,8 +415,8 @@ Criterion: “all implemented UI is localizable and navigable.”
 ## Known limitations and follow-ups
 
 - **Android device verification still pending on this machine** (no adb/Java). All Phase 1/2,
-  bills, and finance acceptance items marked “web-verified” should be confirmed on-device before
-  device acceptance.
+  bills, finance, and notes acceptance items marked “web-verified” should be confirmed on-device
+  before device acceptance.
 - **Bills: payment → expense integration is done** (recording against an account files exactly one
   linked expense in the same transaction; undo reverses both). A payment deliberately recorded
   with “no account” keeps its older shape — payment only, no expense — and the pay screen states
@@ -369,6 +438,12 @@ Criterion: “all implemented UI is localizable and navigable.”
 - **Finance: budgets are monthly and per-category only** — no overall/total budget and no
   rollover between months.
 - **Finance: no export** (CSV/PDF) yet; backup arrives in Phase 9 with authenticated encryption.
+- **Notes are plain text only** (Module C MVP): no rich formatting, checklists, or attachments
+  (attachments are a later-phase table in the master prompt); the model is extensible additively.
+- **Notes: unused tags stay in the tag picker** after their notes are deleted (the `tags` row
+  survives; `deleteTagIfUnused` exists for housekeeping but nothing calls it automatically —
+  no silent data removal, rule 9). Harmless and reusable; prune only if pickers get crowded.
+- **Notes: search is substring-based** (SQL LIKE) — no relevance ranking or tokenized matching.
 - **Bangla renders with system fonts.** No custom Bangla typeface is bundled yet; dedicated fonts
   are a deliberate later polish step (size/weight currently rely on platform defaults).
 - **No custom date-picker localization** — the native picker dialog uses the platform language;
@@ -435,16 +510,28 @@ still useful (and was used) to regenerate typed routes after adding routes.
 | 10 | Database failures produce an error message | ✅ Observed live (real failure rendered the error screen with retry); UI-tested |
 | 11 | TypeScript reports no new errors | ✅ `tsc --noEmit` exit 0 |
 | 12 | App can be launched on the target Android environment | ❌ **Not verified here** — no Android SDK/adb/Java. See launch path above |
-| 13 | Lint and tests green | ✅ `eslint` exit 0 (src warning-free); latest full run: 329/329 jest tests pass |
+| 13 | Lint and tests green | ✅ `eslint` exit 0 (src warning-free); latest full run: 363/363 jest tests pass |
 
 ## Next step (per master prompt §20)
 
-Phases 1–2, the **Bills & Installments module**, and the **Personal Finance module (আয়-ব্যয়)**
-are code-complete and green (tsc/lint/329 tests/bundles) and live-verified on the web build.
-Two parallel next actions:
+Phases 1–2, the **Bills & Installments module**, the **Personal Finance module (আয়-ব্যয়)**,
+the **Notes module (নোট)**, the **Grocery core (বাজার: lists + items, built 2026-10-12 —
+migration 007, no finance writes)**, and the **Prayer module (নামাজ, built 2026-10-12 —
+migration 008: offline adhan calculation, settings, day schedule with cache, prayed/missed
+logs, 14-day history; reminders deferred to Module J)**, and the **Health & medicine module
+(স্বাস্থ্য, built 2026-10-12 — migration 009: medicines with dose schedules, taken/skipped
+logs with weekly adherence, appointments, health notes; recordkeeping only, refill
+reminders deferred to Module J)**, and the **Entertainment library (built 2026-10-12 —
+migration 010: watchlist with statuses/ratings/links, offline Spotlight catalog with
+upcoming tentpoles and acclaimed essentials)**, and **prayer reminders (built 2026-10-12 —
+migration 011 flag + expo-notifications: five daily schedules, permission flow, reschedule
+on settings change, tap-to-open; first Module J slice)** are code-complete and green
+(tsc/lint/543 tests/bundles) and
+live-verified on the web build. Two parallel next actions:
 
-1. **On-device acceptance** for Phases 1–2, bills, and finance when an Android device/emulator is
-   available (run the acceptance tables above, incl. app-restart persistence and airplane mode).
+1. **On-device acceptance** for Phases 1–2, bills, finance, notes, grocery, prayer, and health when an Android
+   device/emulator is available (run the acceptance tables above, incl. app-restart persistence
+   and airplane mode).
 2. **The next build phase**: either **Phase 3 (app lock and security foundation)** — constraints
    already documented in `docs/security.md`; a development build becomes mandatory there — or the
-   next requested module (e.g. Phase 4 notes, the last unbuilt step of the original sequence).
+   next requested module (backup & restore, Phase 9).

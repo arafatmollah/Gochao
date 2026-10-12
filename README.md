@@ -53,17 +53,27 @@ files exactly one linked expense inside the same database transaction; undo reve
 All ten financial-correctness tests required by the master prompt §14 pass against real SQLite;
 on-device acceptance is still pending.
 
-329 tests pass; TypeScript and lint are clean; web and Android bundles export; and the Phase 1 +
-Phase 2 + bills + finance flows were exercised in live browser runs on 2026-10-11 (including the
-Bangla switch surviving a full reload, a transfer leaving income/expense totals untouched, and
-the dashboard money card matching the database). Device launch has not been verified on this
-machine (no Android toolchain here) — details and the launch path are in
+The **Notes module (নোট)** is implemented (migration 005): plain-text notes with create/edit/
+delete, pin-to-top (pinned first, then most recently modified — pinning never rewrites the
+"Updated" date), search across titles and bodies, categories (deleting one keeps its notes) and
+tags (created on first use, linked in the same transaction as the note), a Notes screen with
+category filters and empty/no-match states, a More entry card, and a dashboard preview of the
+three most recently modified notes. Notes stay persistent and searchable offline — verified live.
+
+329 tests passed at the finance milestone; the suite now stands at **363 tests across 36 suites**
+(incl. 31 notes tests). TypeScript and lint are clean; web and Android bundles export; and the
+Phase 1 + Phase 2 + bills + finance flows were exercised in live browser runs on 2026-10-11,
+followed by the notes flow on 2026-10-12 (create, content search, pin, edit, delete-with-confirm,
+and persistence across a full reload — including the Bangla switch surviving a full reload, a
+transfer leaving income/expense totals untouched, and the dashboard money card matching the
+database). Device launch has not been verified on this machine (no Android toolchain here) —
+details and the launch path are in
 [docs/implementation-status.md](docs/implementation-status.md).
 
 Not implemented yet, and not to be claimed as working: app-lock/PIN, database encryption,
-notes/family/groceries/prayer/health modules, OS notifications for bill reminders, backups. The
-More screen lists these modules with phase badges and states plainly that PIN lock and encryption
-are not enabled yet.
+family/groceries/prayer/health modules, OS notifications for bill reminders, backups. The More
+screen lists these modules with phase badges and states plainly that PIN lock and encryption are
+not enabled yet.
 
 ## Requirements
 
@@ -107,16 +117,16 @@ Launch options:
 ```
 src/
 ├── app/          Expo Router routes — (tabs) shell: Home, Tasks, Bills, Finance, More;
-│                 task/bill/account/transaction/transfer/budget/category forms,
-│                 bill detail, bill payment, accounts, transactions, budgets, reports
+│                 task/bill/account/transaction/transfer/budget/category/note forms,
+│                 bill detail, bill payment, accounts, transactions, budgets, reports, notes
 ├── components/   Shared UI primitives (Button, TextField, Card, Chip, Fab, ScreenHeader, …)
-├── db/           SqlDatabase interface + adapter, migrations 001–004,
-│                 repositories (tasks, bills, settings, accounts, categories,
+├── db/           SqlDatabase interface + adapter, migrations 001–005,
+│                 repositories (tasks, bills, settings, notes, accounts, categories,
 │                 transactions, transfers, budgets)
-├── features/     Feature modules (tasks, dashboard, bills, finance: hooks, components,
+├── features/     Feature modules (tasks, dashboard, bills, finance, notes: hooks, components,
 │                 pure helpers)
 ├── i18n/         Translator engine + provider, en/bn dictionaries, formatting, error mapping
-├── services/     Business rules (task, bill/payment, account, category, transaction,
+├── services/     Business rules (task, bill/payment, note, account, category, transaction,
 │                 transfer, budget services + validation)
 ├── theme/        Design tokens
 ├── types/        Domain types
@@ -128,7 +138,7 @@ docs/             Architecture, schema, security, status
 ## Documentation
 
 - [docs/architecture.md](docs/architecture.md) — layers, decisions, data flow
-- [docs/database-schema.md](docs/database-schema.md) — conventions, migrations 001–004, planned migrations
+- [docs/database-schema.md](docs/database-schema.md) — conventions, migrations 001–005, planned migrations
 - [docs/security.md](docs/security.md) — current security state, PIN/encryption plan, threat model
 - [docs/implementation-status.md](docs/implementation-status.md) — what's done, verified, pending
 - [docs/master-prompt.md](docs/master-prompt.md) — the full product/build specification

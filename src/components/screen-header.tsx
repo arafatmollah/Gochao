@@ -1,7 +1,9 @@
+import { Ionicons } from '@expo/vector-icons';
 import type { ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
-import { Colors, Spacing } from '@/theme/tokens';
+import { useTranslation } from '@/i18n';
+import { Colors, IconSize, Spacing } from '@/theme/tokens';
 
 import { AppText } from './app-text';
 
@@ -13,6 +15,8 @@ export interface ScreenHeaderProps {
   title: string;
   /** Optional trailing actions rendered on the kicker row. */
   right?: ReactNode;
+  /** Shows a back chevron that calls this handler (for headerless screens). */
+  onBack?: () => void;
   testID?: string;
 }
 
@@ -20,10 +24,22 @@ export interface ScreenHeaderProps {
  * Two-line screen header matching the reference design: a small muted kicker
  * over a large title, with room for trailing actions.
  */
-export function ScreenHeader({ kicker, kickerTone = 'default', title, right, testID }: ScreenHeaderProps) {
+export function ScreenHeader({ kicker, kickerTone = 'default', title, right, onBack, testID }: ScreenHeaderProps) {
+  const { t } = useTranslation();
   return (
     <View style={styles.container} testID={testID}>
       <View style={styles.kickerRow}>
+        {onBack ? (
+          <Pressable
+            onPress={onBack}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={t('common.back')}
+            testID={testID ? `${testID}-back` : 'screen-header-back'}
+            style={styles.backButton}>
+            <Ionicons name="chevron-back" size={IconSize.md} color={Colors.text} />
+          </Pressable>
+        ) : null}
         <View style={styles.kickerColumn}>
           {kicker ? (
             <AppText
@@ -55,6 +71,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.md,
+  },
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: -Spacing.sm,
   },
   kickerColumn: {
     flex: 1,

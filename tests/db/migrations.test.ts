@@ -28,6 +28,22 @@ describe('migration runner', () => {
     expect(names).toContain('transactions');
     expect(names).toContain('transfers');
     expect(names).toContain('budgets');
+    expect(names).toContain('grocery_lists');
+    expect(names).toContain('grocery_items');
+    expect(names).toContain('prayer_settings');
+    expect(names).toContain('prayer_day_times');
+    expect(names).toContain('prayer_logs');
+    expect(names).toContain('medicines');
+    expect(names).toContain('medicine_schedules');
+    expect(names).toContain('medicine_logs');
+    expect(names).toContain('appointments');
+    expect(names).toContain('health_records');
+    expect(names).toContain('watchlist_items');
+
+    const prayerColumns = await db.getAllAsync<{ name: string }>(
+      `SELECT name FROM pragma_table_info('prayer_settings')`,
+    );
+    expect(prayerColumns.map((column) => column.name)).toContain('reminders_enabled');
 
     const indexes = await db.getAllAsync<{ name: string }>(
       `SELECT name FROM sqlite_master WHERE type = 'index' AND name LIKE 'idx_%' ORDER BY name`,
@@ -48,6 +64,18 @@ describe('migration runner', () => {
     expect(indexNames).toContain('idx_transfers_from_occurred');
     expect(indexNames).toContain('idx_transfers_to_occurred');
     expect(indexNames).toContain('idx_transfers_occurred_on');
+    expect(indexNames).toContain('idx_grocery_lists_archived_updated');
+    expect(indexNames).toContain('idx_grocery_items_list');
+    expect(indexNames).toContain('idx_grocery_items_member');
+    expect(indexNames).toContain('idx_prayer_day_times_date');
+    expect(indexNames).toContain('idx_prayer_logs_date');
+    expect(indexNames).toContain('idx_medicines_archived_name');
+    expect(indexNames).toContain('idx_medicine_schedules_medicine');
+    expect(indexNames).toContain('idx_medicine_logs_date');
+    expect(indexNames).toContain('idx_appointments_date');
+    expect(indexNames).toContain('idx_health_records_recorded_on');
+    expect(indexNames).toContain('idx_watchlist_status_updated');
+    expect(indexNames).toContain('idx_watchlist_kind');
 
     db.close();
   });

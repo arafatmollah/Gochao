@@ -26,6 +26,12 @@ export interface Task {
    * future subtasks). Null for top-level tasks.
    */
   parentTaskId: string | null;
+  /**
+   * Family request this task was generated from, if any. At most one task
+   * can reference a given request (UNIQUE index), and deleting the request
+   * keeps the task with this link cleared.
+   */
+  familyRequestId: string | null;
 }
 
 export interface CreateTaskInput {
@@ -34,6 +40,7 @@ export interface CreateTaskInput {
   dueAt?: string | null;
   priority?: TaskPriority;
   parentTaskId?: string | null;
+  familyRequestId?: string | null;
 }
 
 export interface UpdateTaskInput {

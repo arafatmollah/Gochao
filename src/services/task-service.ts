@@ -132,6 +132,7 @@ export function createTaskService(repo: TaskRepository, deps: TaskServiceDeps = 
         priority,
         status: 'pending',
         parentTaskId: input.parentTaskId ?? null,
+        familyRequestId: input.familyRequestId ?? null,
         createdAt: timestamp,
         updatedAt: timestamp,
         completedAt: null,

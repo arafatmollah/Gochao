@@ -35,6 +35,18 @@
         }
       ],
       "expo-sqlite",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Jibon uses your location only to calculate prayer times for where you are."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#0E7565"
+        }
+      ],
       "@react-native-community/datetimepicker"
     ],
     "experiments": {

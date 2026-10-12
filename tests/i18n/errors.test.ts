@@ -65,6 +65,75 @@ describe('translateValidationCode', () => {
     );
   });
 
+  it('translates grocery codes, interpolating shared limit constants', () => {
+    expect(translateValidationCode('grocery_list_name_required', en)).toBe(
+      'Please enter a list name.',
+    );
+    expect(translateValidationCode('grocery_list_name_too_long', en)).toBe(
+      'Keep the list name under 120 characters.',
+    );
+    expect(translateValidationCode('grocery_item_name_required', bn)).toBe(
+      'পণ্যের নাম লিখুন।',
+    );
+    expect(translateValidationCode('grocery_quantity_invalid', en)).toBe(
+      'Enter a quantity greater than zero.',
+    );
+    expect(translateValidationCode('grocery_price_invalid', en)).toBe(
+      'Enter a price greater than zero, or leave it blank.',
+    );
+    expect(translateValidationCode('grocery_member_invalid', bn)).toBe(
+      'এই সদস্য উপলব্ধ নেই। অন্য কাউকে বেছে নিন।',
+    );
+  });
+
+  it('translates prayer codes, interpolating shared limit constants', () => {
+    expect(translateValidationCode('prayer_method_invalid', en)).toBe(
+      'Please choose a valid calculation method.',
+    );
+    expect(translateValidationCode('prayer_latitude_invalid', en)).toBe(
+      'Enter a latitude between -90 and 90.',
+    );
+    expect(translateValidationCode('prayer_city_too_long', en)).toBe(
+      'Keep the place name under 60 characters.',
+    );
+    expect(translateValidationCode('prayer_adjust_invalid', bn)).toBe(
+      'সমন্বয় -৬০ থেকে ৬০ মিনিটের পূর্ণ সংখ্যা হতে হবে।',
+    );
+  });
+
+  it('translates health codes, interpolating shared limit constants', () => {
+    expect(translateValidationCode('medicine_name_required', en)).toBe(
+      'Please enter a medicine name.',
+    );
+    expect(translateValidationCode('medicine_name_too_long', en)).toBe(
+      'Keep the medicine name under 120 characters.',
+    );
+    expect(translateValidationCode('medicine_end_before_start', en)).toBe(
+      'The end date cannot be before the start date.',
+    );
+    expect(translateValidationCode('appointment_title_required', bn)).toBe(
+      'ভিজিটের নাম লিখুন।',
+    );
+    expect(translateValidationCode('health_record_content_too_long', en)).toBe(
+      'Keep the note under 10000 characters.',
+    );
+  });
+
+  it('translates watchlist codes, interpolating shared limit constants', () => {
+    expect(translateValidationCode('watch_title_required', en)).toBe(
+      'Please enter a title.',
+    );
+    expect(translateValidationCode('watch_title_too_long', en)).toBe(
+      'Keep the title under 160 characters.',
+    );
+    expect(translateValidationCode('watch_url_invalid', bn)).toBe(
+      'http(s):// দিয়ে পুরো লিংক লিখুন।',
+    );
+    expect(translateValidationCode('watch_rating_invalid', en)).toBe(
+      'Rate 1 to 5 stars, or leave it unrated.',
+    );
+  });
+
   it('falls back to the generic error for unknown codes', () => {
     expect(translateValidationCode('mystery_code', en)).toBe(
       'Something went wrong. Please try again.',

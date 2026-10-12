@@ -11,6 +11,24 @@ jest.mock('react-native-safe-area-context', () => {
 
 jest.mock('expo-router');
 jest.mock('@/features/dashboard/hooks/use-dashboard');
+// Reanimated drives the prayer widget's entrance and progress animations.
+// Its bundled mock pulls native worklets, so stub the small surface we use.
+jest.mock('react-native-reanimated', () => {
+  const { View } = require('react-native');
+  const chainable = {
+    duration: () => chainable,
+    delay: () => chainable,
+  };
+  return {
+    __esModule: true,
+    default: { View },
+    FadeInUp: chainable,
+    useSharedValue: (init: unknown) => ({ value: init }),
+    useAnimatedStyle: (fn: () => Record<string, unknown>) => fn(),
+    withTiming: (toValue: unknown) => toValue,
+    withRepeat: (value: unknown) => value,
+  };
+});
 
 import { router } from 'expo-router';
 import DashboardScreen from '@/app/(tabs)/index';
@@ -18,7 +36,14 @@ import { buildDashboardFinance } from '@/features/dashboard/finance-summary';
 import { useDashboard } from '@/features/dashboard/hooks/use-dashboard';
 import { buildDashboardSummary } from '@/features/dashboard/summary';
 
-import { makeBillDueItem, makeTask } from '../helpers/factories';
+import {
+  makeBillDueItem,
+  makeDueDose,
+  makeFamilyRequestListItem,
+  makeNote,
+  makePrayerDay,
+  makeTask,
+} from '../helpers/factories';
 
 const mockPush = router.push as jest.Mock;
 const mockUseDashboard = useDashboard as jest.Mock;
@@ -43,6 +68,11 @@ function baseHookState(overrides: Record<string, unknown> = {}) {
     finance: EMPTY_FINANCE,
     tasks: [],
     upcomingBills: [],
+    recentNotes: [],
+    openFamilyRequests: [],
+    openRequestCount: 0,
+    prayerDay: null,
+    dueDoses: [],
     today: '2026-10-11',
     loading: false,
     refreshing: false,
@@ -51,6 +81,9 @@ function baseHookState(overrides: Record<string, unknown> = {}) {
     clearNotice: jest.fn(),
     refresh: jest.fn(),
     toggleComplete: jest.fn(),
+    toggleNotePin: jest.fn(),
+    logDose: jest.fn(),
+    clearDose: jest.fn(),
     ...overrides,
   };
 }
@@ -60,7 +93,7 @@ describe('DashboardScreen', () => {
     mockPush.mockClear();
   });
 
-  it('greets the user and shows the hero card with an honest empty state', async () => {
+  it('greets the user and shows the hero card without an empty task card', async () => {
     mockUseDashboard.mockReturnValue(baseHookState());
     await render(<DashboardScreen />);
 
@@ -68,7 +101,8 @@ describe('DashboardScreen', () => {
 
     const hero = screen.getByTestId('dashboard-hero');
     expect(within(hero).getByText('Nothing due today')).toBeTruthy();
-    expect(screen.getByText('Tasks due today or overdue will show up here.')).toBeTruthy();
+    // The "nothing due" card was removed: no task CTA on an empty home.
+    expect(screen.queryByText('Tasks due today or overdue will show up here.')).toBeNull();
   });
 
   it('navigates to the task form and the money forms from the quick actions and FAB', async () => {
@@ -92,6 +126,9 @@ describe('DashboardScreen', () => {
 
     await fireEvent.press(screen.getByTestId('quick-view-bills'));
     expect(mockPush).toHaveBeenCalledWith('/bills');
+
+    await fireEvent.press(screen.getByTestId('quick-add-family-request'));
+    expect(mockPush).toHaveBeenCalledWith('/request-form');
   });
 
   it('shows the money card with derived figures and opens the finance tab', async () => {
@@ -151,6 +188,119 @@ describe('DashboardScreen', () => {
     await render(<DashboardScreen />);
 
     expect(screen.queryByText('Upcoming bills')).toBeNull();
+  });
+
+  it('previews the most recently modified notes and opens them', async () => {
+    const toggleNotePin = jest.fn();
+    const note = makeNote({ id: 'note-3', title: 'Rent receipts', content: 'Keep every receipt' });
+    mockUseDashboard.mockReturnValue(
+      baseHookState({ recentNotes: [note], toggleNotePin }),
+    );
+    await render(<DashboardScreen />);
+
+    expect(screen.getByTestId('dashboard-notes-header')).toBeTruthy();
+    expect(screen.getByText('Rent receipts')).toBeTruthy();
+    expect(screen.getByText('Keep every receipt')).toBeTruthy();
+
+    await fireEvent.press(screen.getByTestId('dashboard-note-note-3-pin'));
+    expect(toggleNotePin).toHaveBeenCalledWith(note);
+
+    await fireEvent.press(screen.getByTestId('dashboard-note-note-3'));
+    expect(mockPush).toHaveBeenCalledWith({ pathname: '/note-form', params: { id: 'note-3' } });
+
+    await fireEvent.press(screen.getByTestId('dashboard-see-all-notes'));
+    expect(mockPush).toHaveBeenCalledWith('/notes');
+  });
+
+  it('hides the notes section when nothing has been written yet', async () => {
+    mockUseDashboard.mockReturnValue(baseHookState());
+    await render(<DashboardScreen />);
+
+    expect(screen.queryByTestId('dashboard-notes-header')).toBeNull();
+    expect(screen.queryByTestId('dashboard-see-all-notes')).toBeNull();
+  });
+
+  it('previews outstanding family requests and opens the family module', async () => {
+    const request = makeFamilyRequestListItem({ id: 'req-5', title: 'Buy insulin' });
+    mockUseDashboard.mockReturnValue(baseHookState({ openFamilyRequests: [request] }));
+    await render(<DashboardScreen />);
+
+    expect(screen.getByTestId('dashboard-family-header')).toBeTruthy();
+    expect(screen.getByText('Buy insulin')).toBeTruthy();
+
+    await fireEvent.press(screen.getByTestId('dashboard-family-request-req-5'));
+    expect(mockPush).toHaveBeenCalledWith({ pathname: '/request-form', params: { id: 'req-5' } });
+
+    await fireEvent.press(screen.getByTestId('dashboard-see-all-family'));
+    expect(mockPush).toHaveBeenCalledWith('/family');
+  });
+
+  it('hides the family section when no requests are outstanding', async () => {
+    mockUseDashboard.mockReturnValue(baseHookState());
+    await render(<DashboardScreen />);
+
+    expect(screen.queryByTestId('dashboard-family-header')).toBeNull();
+    expect(screen.queryByTestId('dashboard-see-all-family')).toBeNull();
+  });
+
+  it('shows the prayer widget with the next prayer and opens the prayer module', async () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2026, 9, 11, 10, 0, 0));
+    try {
+      mockUseDashboard.mockReturnValue(baseHookState({ prayerDay: makePrayerDay() }));
+      await render(<DashboardScreen />);
+
+      const widget = screen.getByTestId('dashboard-prayer-widget');
+      expect(within(widget).getByText('Next prayer')).toBeTruthy();
+      // The next prayer name appears in the headline and in the day strip.
+      expect(within(widget).getAllByText('Dhuhr')).toHaveLength(2);
+      expect(within(widget).getAllByText('12:00 PM')).toHaveLength(2);
+      // Live stopwatch countdown to Dhuhr from the faked 10:00 clock.
+      const timer = within(widget).getByTestId('dashboard-prayer-timer');
+      expect(within(timer).getByText('02:00:00')).toBeTruthy();
+      expect(within(timer).getByText('left')).toBeTruthy();
+      expect(within(widget).getByText('1 of 5 prayed')).toBeTruthy();
+
+      await fireEvent.press(widget);
+      expect(mockPush).toHaveBeenCalledWith('/prayer');
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('hides the prayer widget when the schedule is unavailable', async () => {
+    mockUseDashboard.mockReturnValue(baseHookState({ prayerDay: null }));
+    await render(<DashboardScreen />);
+
+    expect(screen.queryByTestId('dashboard-prayer-widget')).toBeNull();
+  });
+
+  it('previews today’s doses with logging actions and opens health', async () => {
+    const logDose = jest.fn();
+    const dose = makeDueDose({ scheduleId: 'sch-9', medicineName: 'Napa' });
+    mockUseDashboard.mockReturnValue(baseHookState({ dueDoses: [dose], logDose }));
+    await render(<DashboardScreen />);
+
+    expect(screen.getByTestId('dashboard-doses-header')).toBeTruthy();
+    expect(screen.getByText('Napa')).toBeTruthy();
+    expect(screen.getByText('1 tablet')).toBeTruthy();
+
+    await fireEvent.press(screen.getByTestId('dashboard-dose-sch-9-taken'));
+    expect(logDose).toHaveBeenCalledWith(dose, 'taken');
+
+    await fireEvent.press(screen.getByTestId('dashboard-dose-sch-9-skipped'));
+    expect(logDose).toHaveBeenCalledWith(dose, 'skipped');
+
+    await fireEvent.press(screen.getByTestId('dashboard-see-all-health'));
+    expect(mockPush).toHaveBeenCalledWith('/health');
+  });
+
+  it('hides the doses section when nothing is due today', async () => {
+    mockUseDashboard.mockReturnValue(baseHookState({ dueDoses: [] }));
+    await render(<DashboardScreen />);
+
+    expect(screen.queryByTestId('dashboard-doses-header')).toBeNull();
+    expect(screen.queryByTestId('dashboard-see-all-health')).toBeNull();
   });
 
   it('renders real summary figures and the due tasks', async () => {

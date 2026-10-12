@@ -10,6 +10,7 @@ interface TaskRow {
   priority: TaskPriority;
   status: TaskStatus;
   parent_task_id: string | null;
+  family_request_id: string | null;
   created_at: string;
   updated_at: string;
   completed_at: string | null;
@@ -24,6 +25,7 @@ function mapRow(row: TaskRow): Task {
     priority: row.priority,
     status: row.status,
     parentTaskId: row.parent_task_id,
+    familyRequestId: row.family_request_id,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     completedAt: row.completed_at,
@@ -79,7 +81,7 @@ function buildFilter(filter: TaskFilter): { where: string; params: SqlParam[] } 
 
 const SELECT_COLUMNS = `
   id, title, description, due_at, priority, status, parent_task_id,
-  created_at, updated_at, completed_at
+  family_request_id, created_at, updated_at, completed_at
 `;
 
 const ORDER_PENDING = `
@@ -109,8 +111,8 @@ export class SqliteTaskRepository implements TaskRepository {
     await this.db.runAsync(
       `INSERT INTO tasks (
          id, title, description, due_at, priority, status, parent_task_id,
-         created_at, updated_at, completed_at
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         family_request_id, created_at, updated_at, completed_at
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         task.id,
         task.title,
@@ -119,6 +121,7 @@ export class SqliteTaskRepository implements TaskRepository {
         task.priority,
         task.status,
         task.parentTaskId,
+        task.familyRequestId,
         task.createdAt,
         task.updatedAt,
         task.completedAt,
@@ -130,7 +133,7 @@ export class SqliteTaskRepository implements TaskRepository {
     await this.db.runAsync(
       `UPDATE tasks
           SET title = ?, description = ?, due_at = ?, priority = ?, status = ?,
-              parent_task_id = ?, updated_at = ?, completed_at = ?
+              parent_task_id = ?, family_request_id = ?, updated_at = ?, completed_at = ?
         WHERE id = ?`,
       [
         task.title,
@@ -139,6 +142,7 @@ export class SqliteTaskRepository implements TaskRepository {
         task.priority,
         task.status,
         task.parentTaskId,
+        task.familyRequestId,
         task.updatedAt,
         task.completedAt,
         task.id,

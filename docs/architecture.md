@@ -1,7 +1,7 @@
 # Jibon — Architecture
 
-Status: reflects Phase 0/1, the Phase 2 shell and localization, and the Bills & Installments
-module (2026-10-11). Updated as the app evolves.
+Status: reflects Phase 0/1, the Phase 2 shell and localization, the Bills & Installments and
+Personal Finance modules, and the Notes module (2026-10-12). Updated as the app evolves.
 
 Jibon is a privacy-focused, offline-first personal life management app for Android. It has no
 backend, no account system, and no network dependency: all data lives in a local SQLite database
@@ -60,12 +60,14 @@ jibon/
 │   │   ├── _layout.tsx          # theme + SQLiteProvider + I18nProvider + stack; boot gates
 │   │   ├── (tabs)/              # bottom tab shell
 │   │   │   ├── _layout.tsx      # Tabs: Home / Tasks / Bills / Finance / More (active pill)
-│   │   │   ├── index.tsx        # Home dashboard (hero, quick actions, money card, today's tasks)
+│   │   │   ├── index.tsx        # Home dashboard (hero, quick actions, money card, notes preview)
 │   │   │   ├── tasks.tsx        # Tasks screen (list, search, filters, sections, FAB)
 │   │   │   ├── bills.tsx        # Bills screen (Due / Bills / History segments, FAB)
 │   │   │   ├── finance.tsx      # Finance overview (balance, quick actions, accounts, recent)
-│   │   │   └── more.tsx         # More: language switch, about, upcoming modules
+│   │   │   └── more.tsx         # More: notes entry card, language switch, about, upcoming modules
 │   │   ├── task-form.tsx        # add/edit modal, priority, due date, delete
+│   │   ├── notes.tsx            # Notes screen (search, category chips, pinned-first list, FAB)
+│   │   ├── note-form.tsx        # add/edit note modal (category, tags, pin, delete)
 │   │   ├── bill-form.tsx        # add/edit bill modal (schedule immutable in edit mode)
 │   │   ├── bill-detail.tsx      # bill identity, facts, schedule timeline, archive/delete
 │   │   ├── bill-pay.tsx         # record a payment (local record only; disclaimer banner)
@@ -86,10 +88,13 @@ jibon/
 │   │   ├── sqlite-adapter.ts    # expo-sqlite → SqlDatabase adapter
 │   │   ├── database.ts          # open config: WAL, foreign_keys, migrations
 │   │   ├── migrate.ts           # versioned migration runner
-│   │   ├── migrations/          # 001-initial-schema.ts … 004-transfers-budgets.ts (+ types, index)
-│   │   └── repositories/        # task, settings, account, category, transaction, transfer, budget
+│   │   ├── migrations/          # 001-initial-schema.ts … 005-notes.ts (+ types, index)
+│   │   └── repositories/        # task, settings, note, account, category, transaction,
+│   │                            # transfer, budget
 │   ├── features/
 │   │   ├── tasks/               # grouping.ts, components/task-item.tsx, hooks/
+│   │   ├── notes/               # components/note-card.tsx, hooks/use-notes.ts,
+│   │   │                        # hooks/use-note-form.ts
 │   │   ├── bills/               # grouping.ts (due sections), meta.ts (category icons),
 │   │   │                        # components/occurrence-card.tsx, components/bill-row.tsx,
 │   │   │                        # hooks/use-bills.ts, use-bill-form.ts, use-bill-detail.ts,
@@ -106,19 +111,20 @@ jibon/
 │   ├── i18n/                    # translate.ts (pure engine), index.tsx (provider),
 │   │                            # format.ts (dates/greeting/money), errors.ts (code mapping),
 │   │                            # locales/en.json, locales/bn.json
-│   ├── services/                # task-service.ts, task-validation.ts, bill-service.ts,
+│   ├── services/                # task-service.ts, task-validation.ts, note-service.ts,
+│   │                            # note-validation.ts, bill-service.ts,
 │   │                            # bill-payment-service.ts, bill-validation.ts, account-service,
 │   │                            # category-service, transaction-service, transfer-service,
 │   │                            # budget-service, finance-validation.ts
 │   ├── theme/tokens.ts          # colors, spacing, radius, typography, sizes
-│   ├── types/                   # task.ts, bill.ts, finance.ts
+│   ├── types/                   # task.ts, bill.ts, finance.ts, note.ts
 │   └── utils/                   # id.ts, time.ts, dates.ts, errors.ts, money.ts, recurrence.ts
 ├── tests/                       # Jest: db, services, features, i18n, ui, utils (+ helpers)
 ├── docs/                        # this documentation set
 └── app.json, package.json, tsconfig.json
 ```
 
-Future feature modules (notes, family, groceries, prayer, health, settings) will each get
+Future feature modules (family, groceries, prayer, health, settings) will each get
 a `src/features/<module>/` directory, their own migration (see `docs/database-schema.md`), and —
 only when functional — a tab or entry point. Modules are not added as dead UI.
 
@@ -330,18 +336,42 @@ Built out of roadmap order at the user’s request, after bills:
   and account balances from the database and renders the “Money this month” card plus Add
   income/Add expense quick actions — all real figures (rule 6).
 
+### 13. Notes model (Module C — নোট, roadmap Phase 4)
+
+Plain-text notes with optional categories and tags, built to the master prompt's Module C:
+
+- **Create/edit/delete, pin, search, categorize, tag.** A note needs a non-blank title or body
+  (schema CHECK backs the service validation). Editing sets `updated_at` from the injected clock
+  and never touches `created_at`; the form displays both dates in edit mode.
+- **List order is "pinned first, then most recently modified"**, backed by the composite index
+  `(is_pinned DESC, updated_at DESC)`. Pinning writes only `is_pinned` — it never bumps
+  `updated_at`, so pin/unpin is not presented as a modification.
+- **Search covers titles and bodies** via parameterized LIKE with `\ % _` escaping; category
+  filtering and an optional limit compose into one query. Tags are attached in a second grouped
+  query (one `IN (…)` round trip, no N+1).
+- **Categories and tags.** Category names are unique case-insensitive; deleting a category keeps
+  its notes (`ON DELETE SET NULL`). Tags are created on first use, deduplicated case-insensitively,
+  linked through `note_tags` (cascades both ways), and replaced atomically with the note write
+  inside one exclusive transaction.
+- **Plain text now, rich text later.** No format column or HTML in this phase, per Module C's MVP
+  scope; the model is extensible additively.
+- **Integration.** The More tab has a Notes entry card (the module is live, so it left the
+  "coming later" roadmap), and the dashboard shows up to 3 most recently modified notes with pin
+  toggles and an "All notes" link — all DB-derived (rule 6).
+
 ## Data flow example: opening the app
 
 1. `src/app/_layout.tsx` renders `SQLiteProvider` with `onInit={initializeDatabase}`; inside it,
    `I18nProvider` reads the language preference.
-2. `initializeDatabase` opens `jibon.db`, sets pragmas, runs pending migrations (currently 001–004).
+2. `initializeDatabase` opens `jibon.db`, sets pragmas, runs pending migrations (currently 001–005).
 3. The boot overlay (“Opening Jibon…”) stays up until **both** the database is ready and the
    language preference has been resolved; then the `(tabs)` shell mounts on the Home dashboard.
 4. `useDashboard()` builds its repositories + services from `useSQLiteContext()`, materializes bill
    occurrences ahead (idempotent), and loads in parallel: today’s pending tasks (due ≤ today,
    limit 50), the pending-due count, the overdue count, the completed-today count
-   (`localDayBoundsIso`), the nearest few pending bill occurrences, and the finance figures
-   (today’s expense, the month’s income/expense, account balances).
+   (`localDayBoundsIso`), the nearest few pending bill occurrences, the finance figures
+   (today’s expense, the month’s income/expense, account balances), and the 3 most recently
+   modified notes.
    `buildDashboardSummary()` derives the progress; `buildDashboardFinance()` derives the money
    card (net savings, total balance, account count).
 5. Toggling a checkbox calls `service.setCompleted()` (idempotent), then reloads — the hero card,

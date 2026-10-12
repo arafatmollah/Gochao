@@ -72,6 +72,37 @@ export function formatIsoDateWeekday(value: string, t: TranslateFn): string {
   });
 }
 
+/**
+ * Formats a non-negative second count as a stopwatch `HH:MM:SS` string, e.g.
+ * `7384` -> `02:03:04`. Digits follow the locale. Used for live prayer
+ * countdowns; negative input clamps to zero.
+ */
+export function formatCountdownHMS(totalSeconds: number, locale: Locale): string {
+  const clamped = Math.max(0, Math.floor(totalSeconds));
+  const hours = Math.floor(clamped / 3600);
+  const minutes = Math.floor((clamped % 3600) / 60);
+  const seconds = clamped % 60;
+  const pad = (value: number) => toLocaleDigits(String(value).padStart(2, '0'), locale);
+  return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+}
+
+/**
+ * Formats wall-clock `HH:mm` (24-hour) as 12-hour time, e.g. `18:10` ->
+ * `6:10 PM` and `04:45` -> `4:45 AM`. Digits follow the locale; the
+ * AM/PM marker stays Latin, matching common Bangladeshi app convention.
+ * Returns the input unchanged when it is not a valid wall-clock time.
+ */
+export function formatWallClock12(time: string, locale: Locale): string {
+  const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(time);
+  if (!match) {
+    return time;
+  }
+  const hours24 = Number(match[1]);
+  const suffix = hours24 < 12 ? 'AM' : 'PM';
+  const hours12 = hours24 % 12 === 0 ? 12 : hours24 % 12;
+  return `${toLocaleDigits(String(hours12), locale)}:${toLocaleDigits(match[2], locale)} ${suffix}`;
+}
+
 export type GreetingKey =
   | 'dashboard.greetingMorning'
   | 'dashboard.greetingAfternoon'

@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { useTranslation, formatNumber } from '@/i18n';
 import { Colors, Spacing } from '@/theme/tokens';
@@ -10,12 +10,14 @@ export interface SectionHeaderProps {
   count?: number;
   tone?: 'default' | 'danger';
   testID?: string;
+  /** Overrides container spacing (e.g. no top pad when opening a list). */
+  style?: StyleProp<ViewStyle>;
 }
 
-export function SectionHeader({ title, count, tone = 'default', testID }: SectionHeaderProps) {
+export function SectionHeader({ title, count, tone = 'default', testID, style }: SectionHeaderProps) {
   const { locale } = useTranslation();
   return (
-    <View style={styles.container} testID={testID}>
+    <View style={[styles.container, style]} testID={testID}>
       <AppText variant="label" color={tone === 'danger' ? 'danger' : 'textSecondary'}>
         {title}
       </AppText>
