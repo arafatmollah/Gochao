@@ -19,11 +19,13 @@ import {
 } from '@/features/family/hooks/use-family';
 import { requestStatusLabelKey } from '@/features/family/meta';
 import { useTranslation } from '@/i18n';
-import { Colors, Spacing } from '@/theme/tokens';
+import { Spacing } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
 
 const SEGMENTS: FamilySegment[] = ['requests', 'members'];
 
 export default function FamilyScreen() {
+  const { colors } = useAppTheme();
   const { t } = useTranslation();
   const {
     segment,
@@ -68,8 +70,8 @@ export default function FamilyScreen() {
     <RefreshControl
       refreshing={refreshing}
       onRefresh={refresh}
-      tintColor={Colors.primary}
-      colors={[Colors.primary]}
+      tintColor={colors.primary}
+      colors={[colors.primary]}
     />
   );
 

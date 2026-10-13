@@ -18,7 +18,8 @@ import { useTransferForm } from '@/features/finance/hooks/use-transfer-form';
 import { formatIsoDateDisplay, formatIsoDateRelative } from '@/i18n/format';
 import { translateValidationCode } from '@/i18n/errors';
 import { useTranslation } from '@/i18n';
-import { Colors, IconSize, Spacing } from '@/theme/tokens';
+import { IconSize, Spacing } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
 import {
   addDaysIsoDate,
   isValidIsoDate,
@@ -29,6 +30,7 @@ import {
 import { normalizeDigitInput } from '@/utils/money';
 
 export default function FinanceTransferScreen() {
+  const { colors } = useAppTheme();
   const { t } = useTranslation();
   const params = useLocalSearchParams<{ id?: string }>();
   const transferId =
@@ -203,7 +205,7 @@ export default function FinanceTransferScreen() {
                     variant="secondary"
                     size="sm"
                     onPress={openDatePicker}
-                    icon={<Ionicons name="calendar-outline" size={IconSize.sm} color={Colors.text} />}
+                    icon={<Ionicons name="calendar-outline" size={IconSize.sm} color={colors.text} />}
                     testID="transfer-pick-date-button"
                   />
                 ) : null}

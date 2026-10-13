@@ -3,7 +3,8 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/app-text';
 import { useTranslation } from '@/i18n';
-import { Colors, IconSize, Spacing } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
+import { IconSize, Spacing } from '@/theme/tokens';
 
 export interface FinanceQuickActionsProps {
   onAddIncome: () => void;
@@ -21,38 +22,39 @@ export function FinanceQuickActions({
   onReports,
   testID,
 }: FinanceQuickActionsProps) {
+  const { colors } = useAppTheme();
   const { t } = useTranslation();
   return (
     <View style={styles.row} testID={testID}>
       <QuickAction
         icon="arrow-down-circle-outline"
         label={t('finance.overview.addIncome')}
-        color={Colors.success}
-        backgroundColor={Colors.successSoft}
+        color={colors.success}
+        backgroundColor={colors.successSoft}
         onPress={onAddIncome}
         testID="finance-quick-add-income"
       />
       <QuickAction
         icon="arrow-up-circle-outline"
         label={t('finance.overview.addExpense')}
-        color={Colors.danger}
-        backgroundColor={Colors.dangerSoft}
+        color={colors.danger}
+        backgroundColor={colors.dangerSoft}
         onPress={onAddExpense}
         testID="finance-quick-add-expense"
       />
       <QuickAction
         icon="swap-horizontal-outline"
         label={t('finance.overview.transfer')}
-        color={Colors.accentPurple}
-        backgroundColor={Colors.accentPurpleSoft}
+        color={colors.accentPurple}
+        backgroundColor={colors.accentPurpleSoft}
         onPress={onTransfer}
         testID="finance-quick-transfer"
       />
       <QuickAction
         icon="bar-chart-outline"
         label={t('finance.overview.reports')}
-        color={Colors.accentGold}
-        backgroundColor={Colors.accentGoldSoft}
+        color={colors.accentGold}
+        backgroundColor={colors.accentGoldSoft}
         onPress={onReports}
         testID="finance-quick-reports"
       />

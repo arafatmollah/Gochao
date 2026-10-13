@@ -1,6 +1,9 @@
+import { useMemo } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 
-import { Colors, Radius, Spacing } from '@/theme/tokens';
+import { Radius, Spacing } from '@/theme/tokens';
+import type { ThemeColors } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
 
 import { AppText } from './app-text';
 
@@ -13,6 +16,8 @@ export interface ChipProps {
 
 /** Compact selectable pill used for status/priority filters and quick picks. */
 export function Chip({ label, selected = false, onPress, testID }: ChipProps) {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <Pressable
       testID={testID}
@@ -32,22 +37,23 @@ export function Chip({ label, selected = false, onPress, testID }: ChipProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  chip: {
-    paddingHorizontal: Spacing.md,
-    height: 36,
-    borderRadius: Radius.pill,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  chipSelected: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
-  },
-  chipPressed: {
-    opacity: 0.7,
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    chip: {
+      paddingHorizontal: Spacing.md,
+      height: 36,
+      borderRadius: Radius.pill,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.surface,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    chipSelected: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    chipPressed: {
+      opacity: 0.7,
+    },
+  });

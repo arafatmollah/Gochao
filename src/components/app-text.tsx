@@ -1,6 +1,7 @@
 import { Text, type TextProps, type TextStyle } from 'react-native';
 
-import { Colors, Typography, type ColorName, type TypographyVariant } from '@/theme/tokens';
+import { Typography, type ColorName, type TypographyVariant } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
 
 export interface AppTextProps extends TextProps {
   variant?: TypographyVariant;
@@ -15,9 +16,10 @@ export function AppText({
   style,
   ...rest
 }: AppTextProps) {
+  const { colors } = useAppTheme();
   return (
     <Text
-      style={[Typography[variant], { color: Colors[color] }, align ? { textAlign: align } : null, style]}
+      style={[Typography[variant], { color: colors[color] }, align ? { textAlign: align } : null, style]}
       {...rest}
     />
   );

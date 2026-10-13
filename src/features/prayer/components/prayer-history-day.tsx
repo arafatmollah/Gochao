@@ -1,10 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/app-text';
 import { formatIsoDateDisplay } from '@/i18n/format';
 import { useTranslation } from '@/i18n';
-import { Colors, IconSize, Radius, Spacing } from '@/theme/tokens';
+import { IconSize, Radius, Spacing } from '@/theme/tokens';
+import type { ThemeColors } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
 import type { PrayerDay, PrayerStatus } from '@/types/prayer';
 
 export interface PrayerHistoryDayProps {
@@ -13,7 +16,9 @@ export interface PrayerHistoryDayProps {
 }
 
 export function PrayerHistoryDay({ day, testID }: PrayerHistoryDayProps) {
+  const { colors } = useAppTheme();
   const { t } = useTranslation();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const prayed = day.prayers.filter((entry) => entry.status === 'prayed').length;
 
   return (
@@ -39,6 +44,8 @@ export function PrayerHistoryDay({ day, testID }: PrayerHistoryDayProps) {
 }
 
 function StatusDot({ status }: { status: PrayerStatus | null }) {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View
       style={[
@@ -47,49 +54,50 @@ function StatusDot({ status }: { status: PrayerStatus | null }) {
         status === 'missed' && styles.dotMissed,
       ]}>
       {status === 'prayed' ? (
-        <Ionicons name="checkmark" size={IconSize.sm} color={Colors.surface} />
+        <Ionicons name="checkmark" size={IconSize.sm} color={colors.surface} />
       ) : status === 'missed' ? (
-        <Ionicons name="close" size={IconSize.sm} color={Colors.surface} />
+        <Ionicons name="close" size={IconSize.sm} color={colors.surface} />
       ) : null}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
-    padding: Spacing.lg,
-    gap: Spacing.md,
-  },
-  header: {
-    gap: 2,
-  },
-  dots: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-  },
-  dotCell: {
-    flex: 1,
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  dot: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: Colors.surfaceMuted,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dotPrayed: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
-  },
-  dotMissed: {
-    backgroundColor: Colors.danger,
-    borderColor: Colors.danger,
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    card: {
+      backgroundColor: colors.surface,
+      borderRadius: Radius.lg,
+      padding: Spacing.lg,
+      gap: Spacing.md,
+    },
+    header: {
+      gap: 2,
+    },
+    dots: {
+      flexDirection: 'row',
+      gap: Spacing.sm,
+    },
+    dotCell: {
+      flex: 1,
+      alignItems: 'center',
+      gap: Spacing.xs,
+    },
+    dot: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      backgroundColor: colors.surfaceMuted,
+      borderWidth: 1,
+      borderColor: colors.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    dotPrayed: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    dotMissed: {
+      backgroundColor: colors.danger,
+      borderColor: colors.danger,
+    },
+  });

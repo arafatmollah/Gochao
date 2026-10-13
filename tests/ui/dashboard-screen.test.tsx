@@ -131,6 +131,14 @@ describe('DashboardScreen', () => {
     expect(mockPush).toHaveBeenCalledWith('/request-form');
   });
 
+  it('opens universal search from the header button', async () => {
+    mockUseDashboard.mockReturnValue(baseHookState());
+    await render(<DashboardScreen />);
+
+    await fireEvent.press(screen.getByTestId('dashboard-search-button'));
+    expect(mockPush).toHaveBeenCalledWith('/search');
+  });
+
   it('shows the money card with derived figures and opens the finance tab', async () => {
     mockUseDashboard.mockReturnValue(
       baseHookState({
@@ -243,7 +251,7 @@ describe('DashboardScreen', () => {
     expect(screen.queryByTestId('dashboard-see-all-family')).toBeNull();
   });
 
-  it('shows the prayer widget with the next prayer and opens the prayer module', async () => {
+  it('shows the prayer widget with the current prayer window and opens the prayer module', async () => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date(2026, 9, 11, 10, 0, 0));
     try {
@@ -251,11 +259,12 @@ describe('DashboardScreen', () => {
       await render(<DashboardScreen />);
 
       const widget = screen.getByTestId('dashboard-prayer-widget');
-      expect(within(widget).getByText('Next prayer')).toBeTruthy();
-      // The next prayer name appears in the headline and in the day strip.
-      expect(within(widget).getAllByText('Dhuhr')).toHaveLength(2);
-      expect(within(widget).getAllByText('12:00 PM')).toHaveLength(2);
-      // Live stopwatch countdown to Dhuhr from the faked 10:00 clock.
+      // At the faked 10:00 clock Fajr (from 4:45 AM) is active until Dhuhr.
+      expect(within(widget).getByText('Current prayer')).toBeTruthy();
+      // The active prayer name appears in the headline and in the day strip.
+      expect(within(widget).getAllByText('Fajr')).toHaveLength(2);
+      expect(within(widget).getByText('4:45 AM – 12:00 PM')).toBeTruthy();
+      // Live stopwatch countdown to the window end (Dhuhr) from the faked 10:00 clock.
       const timer = within(widget).getByTestId('dashboard-prayer-timer');
       expect(within(timer).getByText('02:00:00')).toBeTruthy();
       expect(within(timer).getByText('left')).toBeTruthy();

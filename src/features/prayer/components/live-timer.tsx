@@ -7,7 +7,8 @@ import { useNow } from '@/hooks/use-now';
 import { useTranslation } from '@/i18n';
 import { formatCountdownHMS } from '@/i18n/format';
 import { wallClockToMinutes } from '@/services/prayer-calculation';
-import { Colors, Spacing } from '@/theme/tokens';
+import { Spacing } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
 
 export interface LiveTimerProps {
   /** Target wall-clock `HH:mm` (24-hour) later today. */
@@ -23,6 +24,7 @@ export interface LiveTimerProps {
  * target is invalid or already passed.
  */
 export function LiveTimer({ targetTime, tone = 'light', testID }: LiveTimerProps) {
+  const { colors } = useAppTheme();
   const { t, locale } = useTranslation();
   const now = useNow(1000);
   const pulse = useSharedValue(1);
@@ -44,8 +46,8 @@ export function LiveTimer({ targetTime, tone = 'light', testID }: LiveTimerProps
     return null;
   }
 
-  const color = tone === 'light' ? Colors.heroText : Colors.text;
-  const muted = tone === 'light' ? Colors.heroMuted : Colors.textSecondary;
+  const color = tone === 'light' ? colors.heroText : colors.text;
+  const muted = tone === 'light' ? colors.heroMuted : colors.textSecondary;
 
   return (
     <View style={styles.row} testID={testID}>

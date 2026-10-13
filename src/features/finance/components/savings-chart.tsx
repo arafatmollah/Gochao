@@ -3,7 +3,8 @@ import { StyleSheet, View } from 'react-native';
 import { AppText } from '@/components/app-text';
 import { useTranslation } from '@/i18n';
 import { formatMoney } from '@/i18n/format';
-import { Colors, Radius, Spacing } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
+import { Radius, Spacing } from '@/theme/tokens';
 import type { MonthNetItem } from '@/types/finance';
 
 const BAR_AREA_HEIGHT = 72;
@@ -16,6 +17,7 @@ export interface SavingsChartProps {
 
 /** Six-month net savings as simple column bars (up = saved, down = overspent). */
 export function SavingsChart({ series, testID }: SavingsChartProps) {
+  const { colors } = useAppTheme();
   const { t, locale } = useTranslation();
   const maxAbsMinor = Math.max(1, ...series.map((item) => Math.abs(item.netMinor)));
 
@@ -34,7 +36,7 @@ export function SavingsChart({ series, testID }: SavingsChartProps) {
                   styles.bar,
                   {
                     height,
-                    backgroundColor: positive ? Colors.success : Colors.danger,
+                    backgroundColor: positive ? colors.success : colors.danger,
                   },
                 ]}
               />

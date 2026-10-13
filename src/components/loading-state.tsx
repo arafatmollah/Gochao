@@ -1,7 +1,8 @@
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { useTranslation } from '@/i18n';
-import { Colors, Spacing } from '@/theme/tokens';
+import { Spacing } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
 
 import { AppText } from './app-text';
 
@@ -11,10 +12,11 @@ export interface LoadingStateProps {
 }
 
 export function LoadingState({ label, testID }: LoadingStateProps) {
+  const { colors } = useAppTheme();
   const { t } = useTranslation();
   return (
     <View style={styles.container} testID={testID} accessibilityRole="progressbar">
-      <ActivityIndicator size="large" color={Colors.primary} />
+      <ActivityIndicator size="large" color={colors.primary} />
       <AppText variant="body" color="textSecondary">
         {label ?? t('common.loading')}
       </AppText>

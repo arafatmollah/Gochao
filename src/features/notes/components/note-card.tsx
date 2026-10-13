@@ -6,7 +6,8 @@ import { Badge } from '@/components/badge';
 import { Card } from '@/components/card';
 import { useTranslation } from '@/i18n';
 import { formatIsoDateDisplay } from '@/i18n/format';
-import { Colors, IconSize, Spacing } from '@/theme/tokens';
+import { IconSize, Spacing } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
 import type { NoteListItem } from '@/types/note';
 
 export interface NoteCardProps {
@@ -18,6 +19,7 @@ export interface NoteCardProps {
 
 /** List card for one note: title, snippet, category, tags, and modified date. */
 export function NoteCard({ note, onPress, onTogglePin, testID }: NoteCardProps) {
+  const { colors } = useAppTheme();
   const { t } = useTranslation();
   const title = note.title.trim().length > 0 ? note.title : t('notes.untitled');
   const updatedDate = formatIsoDateDisplay(note.updatedAt.slice(0, 10), t);
@@ -37,7 +39,7 @@ export function NoteCard({ note, onPress, onTogglePin, testID }: NoteCardProps) 
           <Ionicons
             name={note.isPinned ? 'bookmark' : 'bookmark-outline'}
             size={IconSize.md}
-            color={note.isPinned ? Colors.primary : Colors.textMuted}
+            color={note.isPinned ? colors.primary : colors.textMuted}
           />
         </Pressable>
       </View>
@@ -52,8 +54,8 @@ export function NoteCard({ note, onPress, onTogglePin, testID }: NoteCardProps) 
         {note.categoryName ? (
           <Badge
             label={note.categoryName}
-            color={Colors.textSecondary}
-            backgroundColor={Colors.surfaceMuted}
+            color={colors.textSecondary}
+            backgroundColor={colors.surfaceMuted}
           />
         ) : null}
         {note.tags.map((tag) => (

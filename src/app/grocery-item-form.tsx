@@ -7,6 +7,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
+import { useMemo } from 'react';
 
 import { AppText } from '@/components/app-text';
 import { Banner } from '@/components/banner';
@@ -25,9 +26,13 @@ import {
 } from '@/features/grocery/hooks/use-grocery-item-form';
 import { translateValidationCode } from '@/i18n/errors';
 import { useTranslation } from '@/i18n';
-import { Colors, IconSize, Spacing } from '@/theme/tokens';
+import { IconSize, Spacing } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
+import type { ThemeColors } from '@/theme/tokens';
 
 export default function GroceryItemFormScreen() {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { t } = useTranslation();
   const params = useLocalSearchParams<{ id?: string; listId?: string }>();
   const itemId =
@@ -224,7 +229,7 @@ export default function GroceryItemFormScreen() {
                     loading={form.deleting}
                     disabled={form.saving}
                     fullWidth
-                    icon={<Ionicons name="trash-outline" size={IconSize.sm} color={Colors.danger} />}
+                    icon={<Ionicons name="trash-outline" size={IconSize.sm} color={colors.danger} />}
                     testID="delete-grocery-item-button"
                   />
                 </View>
@@ -237,7 +242,8 @@ export default function GroceryItemFormScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   flex: {
     flex: 1,
   },
@@ -270,7 +276,7 @@ const styles = StyleSheet.create({
   },
   destructiveZone: {
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: colors.border,
     paddingTop: Spacing.lg,
     marginTop: Spacing.sm,
   },

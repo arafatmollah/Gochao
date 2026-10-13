@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 import { ActivityIndicator, RefreshControl, ScrollView, SectionList, StyleSheet, View } from 'react-native';
+import { useMemo } from 'react';
 
 import { Banner } from '@/components/banner';
 import { Chip } from '@/components/chip';
@@ -15,7 +16,9 @@ import { TaskItem } from '@/features/tasks/components/task-item';
 import type { TaskSection } from '@/features/tasks/grouping';
 import { useTasks } from '@/features/tasks/hooks/use-tasks';
 import { useTranslation } from '@/i18n';
-import { Colors, Spacing } from '@/theme/tokens';
+import { Spacing } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
+import type { ThemeColors } from '@/theme/tokens';
 import type { Task, TaskPriority } from '@/types/task';
 
 interface PriorityFilterOption {
@@ -31,6 +34,8 @@ const PRIORITY_FILTERS: PriorityFilterOption[] = [
 ];
 
 export default function TasksScreen() {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { t } = useTranslation();
   const {
     sections,
@@ -151,8 +156,8 @@ export default function TasksScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={refresh}
-              tintColor={Colors.primary}
-              colors={[Colors.primary]}
+              tintColor={colors.primary}
+              colors={[colors.primary]}
             />
           }
           onEndReached={statusFilter === 'completed' ? loadMore : undefined}
@@ -160,7 +165,7 @@ export default function TasksScreen() {
           ListFooterComponent={
             loadingMore ? (
               <View style={styles.footer}>
-                <ActivityIndicator color={Colors.primary} />
+                <ActivityIndicator color={colors.primary} />
               </View>
             ) : null
           }
@@ -200,10 +205,13 @@ export default function TasksScreen() {
 }
 
 function ListItemSeparator() {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return <View style={styles.separator} />;
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   bannerWrapper: {
     paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.sm,
@@ -221,7 +229,7 @@ const styles = StyleSheet.create({
   chipDivider: {
     width: 1,
     height: 20,
-    backgroundColor: Colors.borderStrong,
+    backgroundColor: colors.borderStrong,
     marginHorizontal: Spacing.xs,
   },
   listContent: {

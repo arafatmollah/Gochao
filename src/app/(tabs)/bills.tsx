@@ -15,12 +15,14 @@ import { OccurrenceCard } from '@/features/bills/components/occurrence-card';
 import type { BillDueSection } from '@/features/bills/grouping';
 import { useBills, type BillsSegment } from '@/features/bills/hooks/use-bills';
 import { useTranslation } from '@/i18n';
-import { Colors, Spacing } from '@/theme/tokens';
+import { Spacing } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
 import type { BillDueItem } from '@/types/bill';
 
 const SEGMENTS: BillsSegment[] = ['due', 'bills', 'history'];
 
 export default function BillsScreen() {
+  const { colors } = useAppTheme();
   const { t } = useTranslation();
   const {
     segment,
@@ -65,8 +67,8 @@ export default function BillsScreen() {
     <RefreshControl
       refreshing={refreshing}
       onRefresh={refresh}
-      tintColor={Colors.primary}
-      colors={[Colors.primary]}
+      tintColor={colors.primary}
+      colors={[colors.primary]}
     />
   );
 
@@ -185,7 +187,7 @@ export default function BillsScreen() {
           ListFooterComponent={
             loadingMore ? (
               <View style={styles.footer}>
-                <ActivityIndicator color={Colors.primary} />
+                <ActivityIndicator color={colors.primary} />
               </View>
             ) : null
           }

@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/app-text';
@@ -7,7 +8,9 @@ import { Card } from '@/components/card';
 import { categoryDisplayName, categoryIcon } from '@/features/finance/meta';
 import { useTranslation } from '@/i18n';
 import { formatMoney } from '@/i18n/format';
-import { Colors, IconSize, Radius, Spacing } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
+import { IconSize, Radius, Spacing } from '@/theme/tokens';
+import type { ThemeColors } from '@/theme/tokens';
 import type { BudgetWithUsage } from '@/types/finance';
 
 export interface BudgetRowProps {
@@ -18,7 +21,9 @@ export interface BudgetRowProps {
 
 /** One monthly budget: category, spent-of-limit progress and remaining/over capture. */
 export function BudgetRow({ budget, onPress, testID }: BudgetRowProps) {
+  const { colors } = useAppTheme();
   const { t, locale } = useTranslation();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   const displayName = categoryDisplayName(
     {
@@ -35,7 +40,7 @@ export function BudgetRow({ budget, onPress, testID }: BudgetRowProps) {
   });
 
   const ratio = budget.amountMinor > 0 ? budget.spentMinor / budget.amountMinor : 0;
-  const barColor = ratio > 1 ? Colors.danger : ratio >= 0.8 ? Colors.warning : Colors.primary;
+  const barColor = ratio > 1 ? colors.danger : ratio >= 0.8 ? colors.warning : colors.primary;
   const exceeded = budget.spentMinor > budget.amountMinor;
   const remainingMinor = budget.amountMinor - budget.spentMinor;
   const percent = Math.round(ratio * 100);
@@ -44,7 +49,7 @@ export function BudgetRow({ budget, onPress, testID }: BudgetRowProps) {
     <Card onPress={onPress} testID={testID} accessibilityLabel={displayName}>
       <View style={styles.row}>
         <View style={styles.iconCircle}>
-          <Ionicons name={icon} size={IconSize.md} color={Colors.primary} />
+          <Ionicons name={icon} size={IconSize.md} color={colors.primary} />
         </View>
         <View style={styles.body}>
           <View style={styles.nameRow}>
@@ -54,8 +59,8 @@ export function BudgetRow({ budget, onPress, testID }: BudgetRowProps) {
             {exceeded ? (
               <Badge
                 label={t('finance.budgets.exceededBadge')}
-                color={Colors.danger}
-                backgroundColor={Colors.dangerSoft}
+                color={colors.danger}
+                backgroundColor={colors.dangerSoft}
               />
             ) : null}
           </View>
@@ -96,47 +101,48 @@ export function BudgetRow({ budget, onPress, testID }: BudgetRowProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-  },
-  iconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.primarySoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  body: {
-    flex: 1,
-    gap: 2,
-  },
-  nameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  name: {
-    flexShrink: 1,
-  },
-  track: {
-    height: 8,
-    borderRadius: Radius.pill,
-    backgroundColor: Colors.surfaceMuted,
-    overflow: 'hidden',
-    marginTop: Spacing.md,
-  },
-  fill: {
-    height: '100%',
-    borderRadius: Radius.pill,
-  },
-  footRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: Spacing.xs,
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.md,
+    },
+    iconCircle: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.primarySoft,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    body: {
+      flex: 1,
+      gap: 2,
+    },
+    nameRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm,
+    },
+    name: {
+      flexShrink: 1,
+    },
+    track: {
+      height: 8,
+      borderRadius: Radius.pill,
+      backgroundColor: colors.surfaceMuted,
+      overflow: 'hidden',
+      marginTop: Spacing.md,
+    },
+    fill: {
+      height: '100%',
+      borderRadius: Radius.pill,
+    },
+    footRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginTop: Spacing.xs,
+    },
+  });

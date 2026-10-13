@@ -1,4 +1,4 @@
-import { calculateDayTimes, findNextPrayer, minutesUntil } from '@/services/prayer-calculation';
+import { calculateDayTimes, findCurrentPrayer, findNextPrayer, minutesUntil, prayerWindowEnd } from '@/services/prayer-calculation';
 import { defaultPrayerSettings } from '@/db/repositories/prayer-repository';
 import { isDayPrayer } from '@/types/prayer';
 
@@ -126,5 +126,58 @@ describe('findNextPrayer', () => {
   it('measures minutes between wall-clock times', () => {
     expect(minutesUntil('18:00', '18:10')).toBe(10);
     expect(minutesUntil('bad', '18:10')).toBeNull();
+  });
+});
+
+describe('prayerWindowEnd', () => {  const times = [
+    { prayer: 'fajr', time: '04:45' },
+    { prayer: 'dhuhr', time: '11:45' },
+    { prayer: 'asr', time: '15:45' },
+    { prayer: 'maghrib', time: '17:35' },
+    { prayer: 'isha', time: '18:50' },
+  ] as const;
+
+  it('ends each prayer window at the next prayer start', () => {
+    expect(prayerWindowEnd([...times], 'fajr')).toBe('11:45');
+    expect(prayerWindowEnd([...times], 'dhuhr')).toBe('15:45');
+    expect(prayerWindowEnd([...times], 'asr')).toBe('17:35');
+    expect(prayerWindowEnd([...times], 'maghrib')).toBe('18:50');
+  });
+
+  it('returns null for the last prayer and unknown prayers', () => {
+    expect(prayerWindowEnd([...times], 'isha')).toBeNull();
+    expect(prayerWindowEnd([], 'fajr')).toBeNull();
+  });
+});
+
+describe('findCurrentPrayer', () => {
+  const times = [
+    { prayer: 'fajr', time: '04:45' },
+    { prayer: 'dhuhr', time: '11:45' },
+    { prayer: 'asr', time: '15:45' },
+    { prayer: 'maghrib', time: '17:35' },
+    { prayer: 'isha', time: '18:50' },
+  ] as const;
+
+  it('returns null before the first prayer of the day', () => {
+    expect(findCurrentPrayer([...times], '00:00')).toBeNull();
+    expect(findCurrentPrayer([...times], '04:44')).toBeNull();
+  });
+
+  it('returns the active prayer once its time has started', () => {
+    expect(findCurrentPrayer([...times], '04:45')).toBe('fajr');
+    expect(findCurrentPrayer([...times], '11:45')).toBe('dhuhr');
+    expect(findCurrentPrayer([...times], '14:00')).toBe('dhuhr');
+    expect(findCurrentPrayer([...times], '15:45')).toBe('asr');
+    expect(findCurrentPrayer([...times], '18:00')).toBe('maghrib');
+  });
+
+  it('stays on Isha after its time has started', () => {
+    expect(findCurrentPrayer([...times], '18:50')).toBe('isha');
+    expect(findCurrentPrayer([...times], '23:59')).toBe('isha');
+  });
+
+  it('returns null for an invalid current time', () => {
+    expect(findCurrentPrayer([...times], 'bad')).toBeNull();
   });
 });

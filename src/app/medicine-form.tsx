@@ -7,6 +7,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
+import { useMemo } from 'react';
 
 import { AppText } from '@/components/app-text';
 import { Banner } from '@/components/banner';
@@ -27,7 +28,9 @@ import {
 } from '@/features/health/hooks/use-medicine-form';
 import { translateValidationCode } from '@/i18n/errors';
 import { useTranslation } from '@/i18n';
-import { Colors, IconSize, Radius, Spacing } from '@/theme/tokens';
+import { IconSize, Radius, Spacing } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
+import type { ThemeColors } from '@/theme/tokens';
 import {
   MEDICINE_FREQUENCIES,
   WEEKDAYS,
@@ -36,6 +39,8 @@ import {
 } from '@/types/health';
 
 export default function MedicineFormScreen() {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { t } = useTranslation();
   const params = useLocalSearchParams<{ id?: string }>();
   const medicineId =
@@ -277,7 +282,7 @@ export default function MedicineFormScreen() {
                     variant="secondary"
                     size="sm"
                     onPress={form.addSchedule}
-                    icon={<Ionicons name="add-outline" size={IconSize.sm} color={Colors.text} />}
+                    icon={<Ionicons name="add-outline" size={IconSize.sm} color={colors.text} />}
                     testID="medicine-add-time-button"
                   />
                 </View>
@@ -319,7 +324,7 @@ export default function MedicineFormScreen() {
                       <Ionicons
                         name={form.isArchived ? 'refresh-outline' : 'archive-outline'}
                         size={IconSize.sm}
-                        color={Colors.text}
+                        color={colors.text}
                       />
                     }
                     testID="archive-medicine-button"
@@ -331,7 +336,7 @@ export default function MedicineFormScreen() {
                     loading={form.deleting}
                     disabled={form.saving || form.archiving}
                     fullWidth
-                    icon={<Ionicons name="trash-outline" size={IconSize.sm} color={Colors.danger} />}
+                    icon={<Ionicons name="trash-outline" size={IconSize.sm} color={colors.danger} />}
                     testID="delete-medicine-button"
                   />
                 </View>
@@ -344,7 +349,8 @@ export default function MedicineFormScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   flex: {
     flex: 1,
   },
@@ -370,7 +376,7 @@ const styles = StyleSheet.create({
   },
   scheduleCard: {
     gap: Spacing.sm,
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: Radius.lg,
     padding: Spacing.md,
   },
@@ -388,7 +394,7 @@ const styles = StyleSheet.create({
   },
   destructiveZone: {
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: colors.border,
     paddingTop: Spacing.lg,
     marginTop: Spacing.sm,
     gap: Spacing.sm,

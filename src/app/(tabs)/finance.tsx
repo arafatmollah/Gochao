@@ -17,13 +17,15 @@ import { BalanceCard } from '@/features/finance/components/balance-card';
 import { FinanceQuickActions } from '@/features/finance/components/finance-quick-actions';
 import { useFinanceOverview } from '@/features/finance/hooks/use-finance-overview';
 import { useTranslation } from '@/i18n';
-import { Colors, IconSize, Spacing } from '@/theme/tokens';
+import { IconSize, Spacing } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
 import type { ActivityRow } from '@/types/finance';
 import { todayIsoDate } from '@/utils/dates';
 
 const ACCOUNTS_PREVIEW = 3;
 
 export default function FinanceScreen() {
+  const { colors } = useAppTheme();
   const { t } = useTranslation();
   const { accounts, totalBalanceMinor, monthTotals, recent, loading, refreshing, error, refresh } =
     useFinanceOverview();
@@ -67,8 +69,8 @@ export default function FinanceScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={refresh}
-              tintColor={Colors.primary}
-              colors={[Colors.primary]}
+              tintColor={colors.primary}
+              colors={[colors.primary]}
             />
           }>
           <BalanceCard totalBalanceMinor={totalBalanceMinor} monthTotals={monthTotals} testID="finance-balance-card" />
@@ -182,14 +184,15 @@ function LinkRow({
   onPress: () => void;
   testID?: string;
 }) {
+  const { colors } = useAppTheme();
   return (
     <Card onPress={onPress} testID={testID} accessibilityLabel={label}>
       <View style={styles.linkRow}>
-        <Ionicons name={icon} size={IconSize.md} color={Colors.primary} />
+        <Ionicons name={icon} size={IconSize.md} color={colors.primary} />
         <AppText variant="bodyStrong" style={styles.linkLabel}>
           {label}
         </AppText>
-        <Ionicons name="chevron-forward" size={IconSize.sm} color={Colors.textMuted} />
+        <Ionicons name="chevron-forward" size={IconSize.sm} color={colors.textMuted} />
       </View>
     </Card>
   );

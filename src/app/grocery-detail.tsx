@@ -20,12 +20,14 @@ import {
 } from '@/features/grocery/hooks/use-grocery-detail';
 import { useTranslation } from '@/i18n';
 import { formatMoney } from '@/i18n/format';
-import { Colors, IconSize, Spacing } from '@/theme/tokens';
+import { IconSize, Spacing } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
 import type { GroceryItemStatusFilter, GroceryItemWithMember } from '@/types/grocery';
 
 const STATUS_FILTERS: GroceryItemStatusFilter[] = ['all', 'remaining', 'purchased'];
 
 export default function GroceryDetailScreen() {
+  const { colors } = useAppTheme();
   const { t, locale } = useTranslation();
   const params = useLocalSearchParams<{ id?: string }>();
   const listId = typeof params.id === 'string' && params.id.length > 0 ? params.id : null;
@@ -187,7 +189,7 @@ export default function GroceryDetailScreen() {
                     size="sm"
                     onPress={openEditList}
                     icon={
-                      <Ionicons name="pencil-outline" size={IconSize.sm} color={Colors.text} />
+                      <Ionicons name="pencil-outline" size={IconSize.sm} color={colors.text} />
                     }
                     testID="edit-grocery-list-button"
                   />
@@ -202,7 +204,7 @@ export default function GroceryDetailScreen() {
                       <Ionicons
                         name={list.isArchived ? 'refresh-outline' : 'archive-outline'}
                         size={IconSize.sm}
-                        color={Colors.text}
+                        color={colors.text}
                       />
                     }
                     testID="archive-grocery-list-button"

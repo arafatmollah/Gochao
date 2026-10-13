@@ -8,9 +8,11 @@ import { Card } from '@/components/card';
 import { Screen } from '@/components/screen';
 import { ScreenHeader } from '@/components/screen-header';
 import { useTranslation } from '@/i18n';
-import { Colors, Spacing } from '@/theme/tokens';
+import { Spacing } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
 
 export default function AboutVersionHistoryScreen() {
+  const { colors } = useAppTheme();
   const { t } = useTranslation();
   const version = Constants.expoConfig?.version ?? '1.0.0';
 
@@ -36,8 +38,8 @@ export default function AboutVersionHistoryScreen() {
             <AppText variant="bodyStrong">1.0.0</AppText>
             <Badge
               label={t('more.aboutVersion', { version })}
-              color={Colors.primary}
-              backgroundColor={Colors.primarySoft}
+              color={colors.primary}
+              backgroundColor={colors.primarySoft}
             />
           </View>
           <AppText variant="body" color="textSecondary">

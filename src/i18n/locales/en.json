@@ -395,6 +395,7 @@
   "dashboard": {
     "todayTasks": "Today's tasks",
     "prayerNextKicker": "Next prayer",
+    "prayerNowKicker": "Current prayer",
     "todayDoses": "Today's doses",
     "healthSeeAll": "Open health",
     "stillToDo": "still to do today",
@@ -450,6 +451,36 @@
       "health": "Health & medicine",
       "prayer": "Prayer",
       "backup": "Backup & restore"
+    }
+  },
+  "search": {
+    "title": "Search",
+    "entryHint": "Search features, tasks, notes…",
+    "placeholder": "Search features, tasks, notes…",
+    "actionsTitle": "Quick actions",
+    "featuresTitle": "Features & settings",
+    "savedTitle": "Saved items",
+    "recentTitle": "Recent activity",
+    "emptyResults": "No matches for “{{query}}”.",
+    "emptyHint": "Try a feature name, a task title, or a command like “add task”.",
+    "kinds": {
+      "task": "Task",
+      "note": "Note",
+      "request": "Request",
+      "grocery": "Grocery list"
+    }
+  },
+  "theme": {
+    "title": "Theme",
+    "hint": "Make Gochao yours — applies instantly.",
+    "names": {
+      "default": "Default",
+      "dark": "Dark",
+      "light": "Light",
+      "anime": "Anime",
+      "loki": "Loki",
+      "ironman": "Iron Man",
+      "strange": "Doctor Strange"
     }
   },
   "finance": {
@@ -949,6 +980,8 @@
     "loading": "Loading prayer times…",
     "historyLoading": "Loading prayer history…",
     "nextPrayer": "Next: {{name}} at {{time}}",
+    "nowPrayer": "Now: {{name}}",
+    "timeWindow": "{{start}} – {{end}}",
     "startsInHours": "{{hours}}h {{minutes}}m left",
     "startsInMinutes": "{{minutes}}m left",
     "timeLeft": "left",
@@ -984,6 +1017,10 @@
     "remindersOn": "Reminders on — one notification per prayer, daily.",
     "remindersDenied": "Notification permission was denied. Allow it in system settings, then try again.",
     "remindersUnavailable": "Reminders are not available on this device.",
+    "testNotification": "Send test notification",
+    "testSent": "Test sent — it should appear within a few seconds.",
+    "testTitle": "Gochao test",
+    "testBody": "Notifications are working.",
     "reminderBody": "{{time}} — time to pray",
     "save": "Save settings",
     "historyTitle": "Prayer history",
@@ -1016,6 +1053,13 @@
       "markMissed": "Mark missed: {{name}}",
       "clearStatus": "Clear status: {{name}}"
     }
+  },
+  "notifications": {
+    "tasksDigestTitle": "Today's tasks",
+    "tasksDueToday": "{{count}} due today",
+    "tasksOverdue": "{{count}} overdue",
+    "recapTitle": "Day recap",
+    "recapBody": "Today: {{prayed}} of {{prayers}} prayers, {{tasks}} tasks done"
   },
   "health": {
     "title": "Health & medicine",
@@ -1217,6 +1261,8 @@
   "about": {
     "versionEntry": "Version History",
     "versionEntryHint": "What's new in Gochao",
+    "updateEntry": "App Updates",
+    "updateEntryHint": "Download the latest version",
     "termsEntry": "Terms & Conditions",
     "termsEntryHint": "Read our terms of use",
     "privacyEntry": "Privacy Policy",
@@ -1230,5 +1276,33 @@
     "termsBody": "1. Gochao is for personal organization. Your data stays on this device; there are no accounts, no cloud sync, and no analytics.\n\n2. Records are yours alone. A bill marked paid, a logged prayer, or a taken dose is your own record — never proof for anyone else, and never medical, financial, or religious advice.\n\n3. The app is provided as-is, without warranty. Deleting the app deletes all its data.\n\n4. Continued use after an update means you accept the terms shipped with that version.",
     "privacyTitle": "Privacy Policy",
     "privacyBody": "Gochao works fully offline.\n\nEverything you enter — tasks, finances, family, health, prayers, lists — is stored in a database on this device only. The app makes no network requests except when you tap a link (for example, a saved video or Contact Developer).\n\nPermissions are used only for what you ask: device location calculates prayer times when you tap “Use my location”; notifications deliver prayer reminders you enable. Denying either only disables that feature.\n\nThere is no app lock or database encryption yet — your device lock screen is the protection. Deleting the app permanently deletes all data."
+  },
+  "update": {
+    "title": "App Updates",
+    "currentVersion": "Current version: {{version}}",
+    "checkButton": "Check for updates",
+    "checking": "Checking GitHub for the latest release…",
+    "upToDate": "You're on the latest version.",
+    "noReleases": "No releases published yet.",
+    "availableTitle": "Update available: {{version}}",
+    "importantBadge": "Important",
+    "notesTitle": "What's new",
+    "noNotes": "No release notes.",
+    "noApk": "This release has no APK attached.",
+    "downloadButton": "Download update",
+    "downloading": "Downloading… {{percent}}%",
+    "downloadingUnknown": "Downloading…",
+    "downloadedNote": "Downloaded. Tap install, then allow “Install unknown apps” if asked.",
+    "installButton": "Install update",
+    "installHint": "On the first update, Android asks you to allow installing from this app.",
+    "androidOnly": "APK download and install work on Android only. You can still read the release notes here.",
+    "importantAlertTitle": "Important update available",
+    "importantAlertBody": "{{version}} is ready — open App updates to install it.",
+    "errors": {
+      "network": "Could not reach GitHub. Check your connection and try again.",
+      "server": "GitHub did not return releases. Try again later.",
+      "download": "Download failed. Check your connection and try again.",
+      "install": "Could not open the installer. Allow “Install unknown apps” for Gochao in system settings, then tap Install again."
+    }
   }
 }

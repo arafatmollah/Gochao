@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/app-text';
@@ -9,11 +9,15 @@ import { Banner } from '@/components/banner';
 import { Screen } from '@/components/screen';
 import { ScreenHeader } from '@/components/screen-header';
 import { useTranslation } from '@/i18n';
-import { CardShadow, Colors, IconSize, Radius, Spacing } from '@/theme/tokens';
+import { CardShadow, IconSize, Radius, Spacing } from '@/theme/tokens';
+import type { ThemeColors } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
 
 export const CONTACT_URL = 'https://github.com/arafatmollah/Gochao/issues';
 
 export default function AboutScreen() {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { t } = useTranslation();
   const [linkError, setLinkError] = useState<string | null>(null);
 
@@ -57,6 +61,13 @@ export default function AboutScreen() {
           testID="about-version-entry"
         />
         <AboutRow
+          icon="arrow-down-circle-outline"
+          title={t('about.updateEntry')}
+          hint={t('about.updateEntryHint')}
+          onPress={() => router.push('/about-update')}
+          testID="about-update-entry"
+        />
+        <AboutRow
           icon="document-text-outline"
           title={t('about.termsEntry')}
           hint={t('about.termsEntryHint')}
@@ -95,6 +106,8 @@ function AboutRow({
   onPress: () => void;
   testID?: string;
 }) {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <Pressable
       onPress={onPress}
@@ -103,7 +116,7 @@ function AboutRow({
       testID={testID}
       style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}>
       <View style={styles.rowIcon}>
-        <Ionicons name={icon} size={IconSize.md} color={Colors.primary} />
+        <Ionicons name={icon} size={IconSize.md} color={colors.primary} />
       </View>
       <View style={styles.rowBody}>
         <AppText variant="bodyStrong">{title}</AppText>
@@ -111,12 +124,12 @@ function AboutRow({
           {hint}
         </AppText>
       </View>
-      <Ionicons name="chevron-forward" size={IconSize.md} color={Colors.textMuted} />
+      <Ionicons name="chevron-forward" size={IconSize.md} color={colors.textMuted} />
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   bannerWrapper: {
     paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.sm,
@@ -131,19 +144,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.md,
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: Radius.lg,
     padding: Spacing.lg,
     ...CardShadow,
   },
   rowPressed: {
-    backgroundColor: Colors.surfaceMuted,
+    backgroundColor: colors.surfaceMuted,
   },
   rowIcon: {
     width: 40,
     height: 40,
     borderRadius: Radius.md,
-    backgroundColor: Colors.primarySoft,
+    backgroundColor: colors.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
   },

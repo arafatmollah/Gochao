@@ -1,11 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/app-text';
 import { Card } from '@/components/card';
 import { useTranslation } from '@/i18n';
 import { formatMoney } from '@/i18n/format';
-import { Colors, IconSize, Spacing, Typography } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
+import { IconSize, Spacing, Typography } from '@/theme/tokens';
+import type { ThemeColors } from '@/theme/tokens';
 
 import type { DashboardFinance } from '../finance-summary';
 
@@ -22,7 +25,9 @@ export interface FinanceSummaryCardProps {
  * `useDashboard` — never hardcoded (rule 6).
  */
 export function FinanceSummaryCard({ finance, onPress, testID }: FinanceSummaryCardProps) {
+  const { colors } = useAppTheme();
   const { t, locale } = useTranslation();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   return (
     <Card
@@ -38,7 +43,7 @@ export function FinanceSummaryCard({ finance, onPress, testID }: FinanceSummaryC
           <AppText variant="caption" color="primary">
             {t('dashboard.financeSeeAll')}
           </AppText>
-          <Ionicons name="chevron-forward" size={IconSize.sm} color={Colors.primary} />
+          <Ionicons name="chevron-forward" size={IconSize.sm} color={colors.primary} />
         </View>
       </View>
 
@@ -90,44 +95,45 @@ export function FinanceSummaryCard({ finance, onPress, testID }: FinanceSummaryC
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    gap: Spacing.md,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.sm,
-  },
-  linkRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
-  },
-  balanceBlock: {
-    gap: 2,
-  },
-  value: {
-    marginBottom: Spacing.sm,
-  },
-  columns: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  column: {
-    flex: 1,
-    gap: 2,
-  },
-  columnDivider: {
-    width: StyleSheet.hairlineWidth,
-    alignSelf: 'stretch',
-    backgroundColor: Colors.border,
-    marginHorizontal: Spacing.md,
-  },
-  columnLabel: {
-    // Reserve two caption lines so all three value rows align even when one
-    // label wraps ("Expenses this month" / "Net savings this month").
-    minHeight: Typography.caption.lineHeight * 2,
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    card: {
+      gap: Spacing.md,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: Spacing.sm,
+    },
+    linkRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 2,
+    },
+    balanceBlock: {
+      gap: 2,
+    },
+    value: {
+      marginBottom: Spacing.sm,
+    },
+    columns: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    column: {
+      flex: 1,
+      gap: 2,
+    },
+    columnDivider: {
+      width: StyleSheet.hairlineWidth,
+      alignSelf: 'stretch',
+      backgroundColor: colors.border,
+      marginHorizontal: Spacing.md,
+    },
+    columnLabel: {
+      // Reserve two caption lines so all three value rows align even when one
+      // label wraps ("Expenses this month" / "Net savings this month").
+      minHeight: Typography.caption.lineHeight * 2,
+    },
+  });

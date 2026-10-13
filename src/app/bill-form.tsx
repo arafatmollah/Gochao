@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/app-text';
@@ -17,7 +17,9 @@ import { useBillForm } from '@/features/bills/hooks/use-bill-form';
 import { translateValidationCode } from '@/i18n/errors';
 import { formatIsoDateDisplay, formatIsoDateRelative } from '@/i18n/format';
 import { useTranslation } from '@/i18n';
-import { Colors, IconSize, Spacing } from '@/theme/tokens';
+import { IconSize, Spacing } from '@/theme/tokens';
+import type { ThemeColors } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
 import {
   BILL_CATEGORIES,
   BILL_NAME_MAX_LENGTH,
@@ -30,6 +32,8 @@ import { addDaysIsoDate, parseIsoDate, toIsoDate, todayIsoDate, isValidIsoDate }
 import { normalizeDigitInput } from '@/utils/money';
 
 export default function BillFormScreen() {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { t } = useTranslation();
   const params = useLocalSearchParams<{ id?: string }>();
   const billId = typeof params.id === 'string' && params.id.length > 0 ? params.id : undefined;
@@ -223,7 +227,7 @@ export default function BillFormScreen() {
                         variant="secondary"
                         size="sm"
                         onPress={openDatePicker}
-                        icon={<Ionicons name="calendar-outline" size={IconSize.sm} color={Colors.text} />}
+                        icon={<Ionicons name="calendar-outline" size={IconSize.sm} color={colors.text} />}
                         testID="bill-pick-date-button"
                       />
                     ) : null}
@@ -306,7 +310,7 @@ export default function BillFormScreen() {
                     loading={form.deleting}
                     disabled={form.saving}
                     fullWidth
-                    icon={<Ionicons name="trash-outline" size={IconSize.sm} color={Colors.danger} />}
+                    icon={<Ionicons name="trash-outline" size={IconSize.sm} color={colors.danger} />}
                     testID="delete-bill-button"
                   />
                 </View>
@@ -328,7 +332,7 @@ export default function BillFormScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   flex: {
     flex: 1,
   },
@@ -351,7 +355,7 @@ const styles = StyleSheet.create({
   },
   destructiveZone: {
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: colors.border,
     paddingTop: Spacing.lg,
     marginTop: Spacing.sm,
     gap: Spacing.sm,

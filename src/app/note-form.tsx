@@ -1,5 +1,6 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { useMemo } from 'react';
 
 import { AppText } from '@/components/app-text';
 import { Banner } from '@/components/banner';
@@ -12,10 +13,14 @@ import { TextField } from '@/components/text-field';
 import { useNoteForm } from '@/features/notes/hooks/use-note-form';
 import { useTranslation } from '@/i18n';
 import { formatIsoDateDisplay } from '@/i18n/format';
-import { Colors, Radius, Spacing, Typography } from '@/theme/tokens';
+import { Radius, Spacing, Typography } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
+import type { ThemeColors } from '@/theme/tokens';
 import { NOTE_CONTENT_MAX_LENGTH, NOTE_TITLE_MAX_LENGTH } from '@/types/note';
 
 export default function NoteFormScreen() {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { t } = useTranslation();
   const params = useLocalSearchParams<{ id?: string }>();
   const noteId = typeof params.id === 'string' && params.id.length > 0 ? params.id : null;
@@ -108,7 +113,7 @@ export default function NoteFormScreen() {
                   value={form.newCategoryName}
                   onChangeText={form.setNewCategoryName}
                   placeholder={t('notes.form.newCategoryPlaceholder')}
-                  placeholderTextColor={Colors.textMuted}
+                  placeholderTextColor={colors.textMuted}
                   style={styles.newCategoryInput}
                   testID="note-new-category-input"
                   accessibilityLabel={t('notes.form.newCategoryPlaceholder')}
@@ -159,7 +164,7 @@ export default function NoteFormScreen() {
                 value={form.newTagName}
                 onChangeText={form.setNewTagName}
                 placeholder={t('notes.form.tagInputPlaceholder')}
-                placeholderTextColor={Colors.textMuted}
+                placeholderTextColor={colors.textMuted}
                 style={styles.tagInput}
                 onSubmitEditing={form.addNewTag}
                 returnKeyType="done"
@@ -213,7 +218,8 @@ export default function NoteFormScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   content: {
     paddingHorizontal: Spacing.lg,
     paddingBottom: 48,
@@ -234,24 +240,24 @@ const styles = StyleSheet.create({
   },
   newCategoryInput: {
     flex: 1,
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     borderRadius: Radius.md,
     paddingHorizontal: Spacing.md,
     minHeight: 40,
     ...Typography.body,
-    color: Colors.text,
+    color: colors.text,
   },
   tagInput: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     borderRadius: Radius.md,
     paddingHorizontal: Spacing.md,
     minHeight: 44,
     ...Typography.body,
-    color: Colors.text,
+    color: colors.text,
   },
   dates: {
     gap: 2,

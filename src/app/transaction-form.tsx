@@ -19,7 +19,8 @@ import { useTransactionForm } from '@/features/finance/hooks/use-transaction-for
 import { translateValidationCode } from '@/i18n/errors';
 import { formatIsoDateDisplay, formatIsoDateRelative } from '@/i18n/format';
 import { useTranslation } from '@/i18n';
-import { Colors, IconSize, Spacing } from '@/theme/tokens';
+import { IconSize, Spacing } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
 import type { TransactionKind } from '@/types/finance';
 import {
   addDaysIsoDate,
@@ -31,6 +32,7 @@ import {
 import { normalizeDigitInput } from '@/utils/money';
 
 export default function TransactionFormScreen() {
+  const { colors } = useAppTheme();
   const { t } = useTranslation();
   const params = useLocalSearchParams<{ id?: string; kind?: string }>();
   const transactionId =
@@ -222,7 +224,7 @@ export default function TransactionFormScreen() {
                     variant="secondary"
                     size="sm"
                     onPress={openDatePicker}
-                    icon={<Ionicons name="calendar-outline" size={IconSize.sm} color={Colors.text} />}
+                    icon={<Ionicons name="calendar-outline" size={IconSize.sm} color={colors.text} />}
                     testID="transaction-pick-date-button"
                   />
                 ) : null}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   StyleSheet,
   TextInput,
@@ -8,7 +8,9 @@ import {
 } from 'react-native';
 
 import { useTranslation } from '@/i18n';
-import { Colors, Radius, Spacing, Typography } from '@/theme/tokens';
+import { Radius, Spacing, Typography } from '@/theme/tokens';
+import type { ThemeColors } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
 
 import { AppText } from './app-text';
 
@@ -45,14 +47,16 @@ export function TextField({
   testID,
   accessibilityHint,
 }: TextFieldProps) {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { t } = useTranslation();
   const [focused, setFocused] = useState(false);
 
   const borderColor = error
-    ? Colors.danger
+    ? colors.danger
     : focused
-      ? Colors.primary
-      : Colors.border;
+      ? colors.primary
+      : colors.border;
 
   return (
     <View style={styles.container}>
@@ -72,7 +76,7 @@ export function TextField({
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor={Colors.textMuted}
+        placeholderTextColor={colors.textMuted}
         multiline={multiline}
         keyboardType={keyboardType}
         autoFocus={autoFocus}
@@ -110,28 +114,29 @@ function helperText(value: string, maxLength?: number): string | null {
   return `${value.length}/${maxLength}`;
 }
 
-const styles = StyleSheet.create({
-  container: {
-    gap: Spacing.xs,
-  },
-  labelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  input: {
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderRadius: Radius.md,
-    paddingHorizontal: Spacing.md,
-    minHeight: 48,
-    ...Typography.body,
-    color: Colors.text,
-  },
-  inputMultiline: {
-    minHeight: 100,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.md,
-    textAlignVertical: 'top',
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      gap: Spacing.xs,
+    },
+    labelRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    input: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderRadius: Radius.md,
+      paddingHorizontal: Spacing.md,
+      minHeight: 48,
+      ...Typography.body,
+      color: colors.text,
+    },
+    inputMultiline: {
+      minHeight: 100,
+      paddingTop: Spacing.md,
+      paddingBottom: Spacing.md,
+      textAlignVertical: 'top',
+    },
+  });

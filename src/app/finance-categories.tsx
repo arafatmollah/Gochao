@@ -11,10 +11,12 @@ import { Screen } from '@/components/screen';
 import { CategoryRow } from '@/features/finance/components/category-row';
 import { useCategories } from '@/features/finance/hooks/use-categories';
 import { useTranslation } from '@/i18n';
-import { Colors, Spacing } from '@/theme/tokens';
+import { Spacing } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
 import type { CategoryWithUsage } from '@/types/finance';
 
 export default function FinanceCategoriesScreen() {
+  const { colors } = useAppTheme();
   const { t } = useTranslation();
   const { income, expense, includeArchived, setIncludeArchived, loading, refreshing, error, refresh } =
     useCategories();
@@ -78,8 +80,8 @@ export default function FinanceCategoriesScreen() {
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={refresh}
-                tintColor={Colors.primary}
-                colors={[Colors.primary]}
+                tintColor={colors.primary}
+                colors={[colors.primary]}
               />
             }
             ListEmptyComponent={

@@ -11,10 +11,12 @@ import { Screen } from '@/components/screen';
 import { AccountRow } from '@/features/finance/components/account-row';
 import { useAccounts } from '@/features/finance/hooks/use-accounts';
 import { useTranslation } from '@/i18n';
-import { Colors, Spacing } from '@/theme/tokens';
+import { Spacing } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
 import type { AccountWithBalance } from '@/types/finance';
 
 export default function FinanceAccountsScreen() {
+  const { colors } = useAppTheme();
   const { t } = useTranslation();
   const { accounts, includeArchived, setIncludeArchived, loading, refreshing, error, refresh } =
     useAccounts();
@@ -57,8 +59,8 @@ export default function FinanceAccountsScreen() {
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={refresh}
-                tintColor={Colors.primary}
-                colors={[Colors.primary]}
+                tintColor={colors.primary}
+                colors={[colors.primary]}
               />
             }
             ListHeaderComponent={

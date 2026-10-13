@@ -1,9 +1,10 @@
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { useMemo } from 'react';
 
 import { Banner } from '@/components/banner';
-import { Button } from '@/components/button';
-import { ErrorState } from '@/components/error-state';
+import { Button } from '@/components/button';import { ErrorState } from '@/components/error-state';
 import { Fab } from '@/components/fab';
 import { LoadingState } from '@/components/loading-state';
 import { Screen } from '@/components/screen';
@@ -22,12 +23,16 @@ import { TaskItem } from '@/features/tasks/components/task-item';
 import { buildActiveSections } from '@/features/tasks/grouping';
 import { formatIsoDateWeekday, greetingKeyForHour } from '@/i18n/format';
 import { useTranslation } from '@/i18n';
-import { Colors, Spacing } from '@/theme/tokens';
+import { IconSize, Spacing } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
+import type { ThemeColors } from '@/theme/tokens';
 import type { BillDueItem } from '@/types/bill';
 import type { Task } from '@/types/task';
 import { todayIsoDate } from '@/utils/dates';
 
 export default function DashboardScreen() {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { t } = useTranslation();
   const {
     summary,
@@ -117,7 +122,22 @@ export default function DashboardScreen() {
 
   return (
     <Screen edges={['top']}>
-      <ScreenHeader kicker={dateLine} title={greeting} testID="dashboard-header" />
+      <ScreenHeader
+        kicker={dateLine}
+        title={greeting}
+        testID="dashboard-header"
+        right={
+          <Pressable
+            onPress={() => router.push('/search')}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={t('search.title')}
+            testID="dashboard-search-button"
+            style={({ pressed }) => [styles.searchButton, pressed && styles.searchButtonPressed]}>
+            <Ionicons name="search" size={IconSize.md} color={colors.text} />
+          </Pressable>
+        }
+      />
 
       {notice ? (
         <View style={styles.bannerWrapper}>
@@ -137,8 +157,8 @@ export default function DashboardScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={refresh}
-              tintColor={Colors.primary}
-              colors={[Colors.primary]}
+              tintColor={colors.primary}
+              colors={[colors.primary]}
             />
           }>
           <HeroCard summary={summary} testID="dashboard-hero" />
@@ -331,10 +351,22 @@ export default function DashboardScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   bannerWrapper: {
     paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.sm,
+  },
+  searchButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  searchButtonPressed: {
+    backgroundColor: colors.surfaceMuted,
   },
   content: {
     paddingHorizontal: Spacing.lg,

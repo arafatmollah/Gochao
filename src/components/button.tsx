@@ -1,7 +1,10 @@
 import type { ReactNode } from 'react';
+import { useMemo } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
-import { Colors, ControlSize, Radius, Spacing } from '@/theme/tokens';
+import { ControlSize, Radius, Spacing } from '@/theme/tokens';
+import type { ThemeColors } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
 
 import { AppText } from './app-text';
 
@@ -33,8 +36,11 @@ export function Button({
   accessibilityHint,
   testID,
 }: ButtonProps) {
+  const { colors } = useAppTheme();
   const isDisabled = disabled || loading;
-  const textColor = buttonTextColor(variant);
+  const textColor = buttonTextColor(variant, colors);
+  const variantStyles = useMemo(() => makeVariantStyles(colors), [colors]);
+  const pressedStyles = useMemo(() => makePressedStyles(colors), [colors]);
 
   return (
     <Pressable
@@ -68,16 +74,16 @@ export function Button({
   );
 }
 
-function buttonTextColor(variant: ButtonVariant): string {
+function buttonTextColor(variant: ButtonVariant, colors: ThemeColors): string {
   switch (variant) {
     case 'primary':
-      return Colors.onPrimary;
+      return colors.onPrimary;
     case 'secondary':
-      return Colors.text;
+      return colors.text;
     case 'ghost':
-      return Colors.primary;
+      return colors.primary;
     case 'danger':
-      return Colors.danger;
+      return colors.danger;
   }
 }
 
@@ -113,34 +119,36 @@ const styles = StyleSheet.create({
   },
 });
 
-const variantStyles = StyleSheet.create({
-  primary: {
-    backgroundColor: Colors.primary,
-  },
-  secondary: {
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.borderStrong,
-  },
-  ghost: {
-    backgroundColor: 'transparent',
-  },
-  danger: {
-    backgroundColor: Colors.dangerSoft,
-  },
-});
+const makeVariantStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    primary: {
+      backgroundColor: colors.primary,
+    },
+    secondary: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.borderStrong,
+    },
+    ghost: {
+      backgroundColor: 'transparent',
+    },
+    danger: {
+      backgroundColor: colors.dangerSoft,
+    },
+  });
 
-const pressedStyles = StyleSheet.create({
-  primary: {
-    backgroundColor: Colors.primaryPressed,
-  },
-  secondary: {
-    backgroundColor: Colors.surfaceMuted,
-  },
-  ghost: {
-    backgroundColor: Colors.primarySoft,
-  },
-  danger: {
-    backgroundColor: '#EFD8D2',
-  },
-});
+const makePressedStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    primary: {
+      backgroundColor: colors.primaryPressed,
+    },
+    secondary: {
+      backgroundColor: colors.surfaceMuted,
+    },
+    ghost: {
+      backgroundColor: colors.primarySoft,
+    },
+    danger: {
+      backgroundColor: '#EFD8D2',
+    },
+  });

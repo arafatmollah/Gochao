@@ -1,11 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/app-text';
 import { useTranslation } from '@/i18n';
 import { formatWallClock12 } from '@/i18n/format';
-import { CardShadow, Colors, IconSize, Radius, Spacing } from '@/theme/tokens';
+import { CardShadow, IconSize, Radius, Spacing } from '@/theme/tokens';
+import type { ThemeColors } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
 import { isDayPrayer } from '@/types/prayer';
 import type { DayPrayer, PrayerStatus } from '@/types/prayer';
 
@@ -13,34 +16,43 @@ export interface PrayerTimeRowProps {
   entry: DayPrayer;
   highlighted: boolean;
   onCycleStatus: () => void;
+  /**
+   * End of this prayer's availability window (the next prayer's start,
+   * wall-clock `HH:mm`). Shown as a `start – end` range; null/omitted
+   * shows just the start time (e.g. the day's last prayer).
+   */
+  endTime?: string | null;
   testID?: string;
 }
 
 /** Midnight gradient for night prayers (Fajr, Maghrib, Isha). */
 const NIGHT_GRADIENT = ['#232046', '#4B3670'] as const;
 
-export function PrayerTimeRow({ entry, highlighted, onCycleStatus, testID }: PrayerTimeRowProps) {
+export function PrayerTimeRow({ entry, highlighted, onCycleStatus, endTime, testID }: PrayerTimeRowProps) {
+  const { colors } = useAppTheme();
   const { t, locale } = useTranslation();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const day = isDayPrayer(entry.prayer);
   const time12 = formatWallClock12(entry.time, locale);
+  const end12 = endTime ? formatWallClock12(endTime, locale) : null;
 
   const iconName = day ? 'sunny-outline' : 'moon-outline';
   const status = entry.status;
 
-  const mainColor = day ? Colors.text : Colors.heroText;
-  const mutedColor = day ? Colors.textSecondary : Colors.heroMuted;
+  const mainColor = day ? colors.text : colors.heroText;
+  const mutedColor = day ? colors.textSecondary : colors.heroMuted;
   const checkColor =
     status === 'prayed'
       ? day
-        ? Colors.primary
-        : Colors.heroPositive
+        ? colors.primary
+        : colors.heroPositive
       : status === 'missed'
         ? day
-          ? Colors.danger
-          : Colors.heroNegative
+          ? colors.danger
+          : colors.heroNegative
         : day
-          ? Colors.borderStrong
-          : Colors.heroMuted;
+          ? colors.borderStrong
+          : colors.heroMuted;
 
   const content = (
     <View style={styles.inner}>
@@ -48,7 +60,7 @@ export function PrayerTimeRow({ entry, highlighted, onCycleStatus, testID }: Pra
         <Ionicons
           name={iconName}
           size={IconSize.md}
-          color={day ? Colors.accentGold : Colors.heroText}
+          color={day ? colors.accentGold : colors.heroText}
         />
       </View>
 
@@ -57,7 +69,7 @@ export function PrayerTimeRow({ entry, highlighted, onCycleStatus, testID }: Pra
           {t(`prayer.names.${entry.prayer}`)}
         </AppText>
         <AppText variant="caption" style={{ color: mutedColor }}>
-          {time12}
+          {end12 ? t('prayer.timeWindow', { start: time12, end: end12 }) : time12}
         </AppText>
       </View>
 
@@ -110,20 +122,22 @@ export function PrayerTimeRow({ entry, highlighted, onCycleStatus, testID }: Pra
 }
 
 function StatusBadge({ status, onDark }: { status: PrayerStatus; onDark: boolean }) {
+  const { colors } = useAppTheme();
   const { t } = useTranslation();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const prayed = status === 'prayed';
   const backgroundColor = onDark
-    ? Colors.heroTrack
+    ? colors.heroTrack
     : prayed
-      ? Colors.primarySoft
-      : Colors.dangerSoft;
+      ? colors.primarySoft
+      : colors.dangerSoft;
   const textColor = onDark
     ? prayed
-      ? Colors.heroPositive
-      : Colors.heroNegative
+      ? colors.heroPositive
+      : colors.heroNegative
     : prayed
-      ? Colors.primary
-      : Colors.danger;
+      ? colors.primary
+      : colors.danger;
   return (
     <View style={[styles.badge, { backgroundColor }]}>
       <AppText variant="caption" style={{ color: textColor }}>
@@ -133,58 +147,59 @@ function StatusBadge({ status, onDark }: { status: PrayerStatus; onDark: boolean
   );
 }
 
-const styles = StyleSheet.create({
-  shell: {
-    borderRadius: Radius.lg,
-    overflow: 'hidden',
-    ...CardShadow,
-  },
-  shellDay: {
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: 'transparent',
-  },
-  shellDayHighlighted: {
-    borderColor: Colors.primary,
-  },
-  shellNightHighlighted: {
-    borderWidth: 1,
-    borderColor: Colors.accentGoldSoft,
-  },
-  inner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    paddingVertical: Spacing.sm,
-    paddingLeft: Spacing.md,
-    paddingRight: Spacing.sm,
-  },
-  iconBadge: {
-    width: 40,
-    height: 40,
-    borderRadius: Radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconBadgeDay: {
-    backgroundColor: Colors.accentGoldSoft,
-  },
-  iconBadgeNight: {
-    backgroundColor: Colors.heroTrack,
-  },
-  body: {
-    flex: 1,
-    gap: 2,
-  },
-  badge: {
-    borderRadius: Radius.pill,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
-  },
-  checkbox: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    shell: {
+      borderRadius: Radius.lg,
+      overflow: 'hidden',
+      ...CardShadow,
+    },
+    shellDay: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: 'transparent',
+    },
+    shellDayHighlighted: {
+      borderColor: colors.primary,
+    },
+    shellNightHighlighted: {
+      borderWidth: 1,
+      borderColor: colors.accentGoldSoft,
+    },
+    inner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm,
+      paddingVertical: Spacing.sm,
+      paddingLeft: Spacing.md,
+      paddingRight: Spacing.sm,
+    },
+    iconBadge: {
+      width: 40,
+      height: 40,
+      borderRadius: Radius.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    iconBadgeDay: {
+      backgroundColor: colors.accentGoldSoft,
+    },
+    iconBadgeNight: {
+      backgroundColor: colors.heroTrack,
+    },
+    body: {
+      flex: 1,
+      gap: 2,
+    },
+    badge: {
+      borderRadius: Radius.pill,
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: 2,
+    },
+    checkbox: {
+      width: 40,
+      height: 40,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+  });

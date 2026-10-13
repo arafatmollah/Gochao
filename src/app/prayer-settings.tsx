@@ -22,7 +22,8 @@ import {
 } from '@/features/prayer/hooks/use-prayer-settings';
 import { translateValidationCode } from '@/i18n/errors';
 import { useTranslation } from '@/i18n';
-import { Colors, IconSize, Spacing } from '@/theme/tokens';
+import { IconSize, Spacing } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
 import {
   PRAYERS,
   PRAYER_CALCULATION_METHODS,
@@ -33,6 +34,7 @@ import {
 } from '@/types/prayer';
 
 export default function PrayerSettingsScreen() {
+  const { colors } = useAppTheme();
   const { t } = useTranslation();
   const form = usePrayerSettings();
 
@@ -122,7 +124,7 @@ export default function PrayerSettingsScreen() {
                   loading={form.locating}
                   disabled={form.saving}
                   icon={
-                    <Ionicons name="locate-outline" size={IconSize.sm} color={Colors.text} />
+                    <Ionicons name="locate-outline" size={IconSize.sm} color={colors.text} />
                   }
                   testID="prayer-use-location-button"
                 />
@@ -226,6 +228,24 @@ export default function PrayerSettingsScreen() {
                   </AppText>
                 ) : null}
                 {form.remindersError ? <Banner message={form.remindersError} /> : null}
+                {form.testNotice ? (
+                  <Banner message={form.testNotice} onDismiss={form.clearTestNotice} />
+                ) : null}
+                <Button
+                  label={t('prayer.testNotification')}
+                  variant="secondary"
+                  size="sm"
+                  onPress={() => void form.sendTestNotification()}
+                  loading={form.testingNotification}
+                  icon={
+                    <Ionicons
+                      name="notifications-outline"
+                      size={IconSize.sm}
+                      color={colors.text}
+                    />
+                  }
+                  testID="prayer-test-notification-button"
+                />
                 <Button
                   label={
                     form.remindersEnabled
@@ -245,7 +265,7 @@ export default function PrayerSettingsScreen() {
                           : 'notifications-outline'
                       }
                       size={IconSize.sm}
-                      color={Colors.text}
+                      color={colors.text}
                     />
                   }
                   testID="prayer-reminders-toggle"

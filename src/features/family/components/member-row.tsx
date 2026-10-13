@@ -5,7 +5,8 @@ import { Badge } from '@/components/badge';
 import { Card } from '@/components/card';
 import { relationshipLabelKey } from '@/features/family/meta';
 import { useTranslation } from '@/i18n';
-import { Colors, Spacing } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
+import { Spacing } from '@/theme/tokens';
 import type { FamilyMember } from '@/types/family';
 
 export interface MemberRowProps {
@@ -16,6 +17,7 @@ export interface MemberRowProps {
 
 /** List row for one family member; archived members are badged and dimmed. */
 export function MemberRow({ member, onPress, testID }: MemberRowProps) {
+  const { colors } = useAppTheme();
   const { t } = useTranslation();
 
   return (
@@ -30,15 +32,15 @@ export function MemberRow({ member, onPress, testID }: MemberRowProps) {
         </AppText>
         <Badge
           label={t(relationshipLabelKey(member.relationship))}
-          color={Colors.textSecondary}
-          backgroundColor={Colors.surfaceMuted}
+          color={colors.textSecondary}
+          backgroundColor={colors.surfaceMuted}
           testID={testID ? `${testID}-relationship` : undefined}
         />
         {member.isArchived ? (
           <Badge
             label={t('family.archived')}
-            color={Colors.textMuted}
-            backgroundColor={Colors.surfaceMuted}
+            color={colors.textMuted}
+            backgroundColor={colors.surfaceMuted}
             testID={testID ? `${testID}-archived` : undefined}
           />
         ) : null}

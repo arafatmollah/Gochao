@@ -12,11 +12,14 @@ import { AppText } from '@/components/app-text';
 import { useTranslation } from '@/i18n';
 import { formatWallClock12 } from '@/i18n/format';
 import {
+  findCurrentPrayer,
   findNextPrayer,
   nowWallClock,
   wallClockToMinutes,
 } from '@/services/prayer-calculation';
-import { Colors, IconSize, Radius, Spacing } from '@/theme/tokens';
+import { IconSize, Radius, Spacing } from '@/theme/tokens';
+import type { ThemeColors } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
 import { isDayPrayer, PRAYERS, type PrayerDay, type PrayerName } from '@/types/prayer';
 
 import { LiveTimer } from './live-timer';
@@ -34,7 +37,9 @@ export interface PrayerWidgetProps {
  * Read-only — tapping anywhere opens the prayer module for logging.
  */
 export function PrayerWidget({ day, onPress, testID }: PrayerWidgetProps) {
+  const { colors } = useAppTheme();
   const { t, locale } = useTranslation();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [clockTick, setClockTick] = useState(() => nowWallClock());
   const progressAnim = useSharedValue(0);
 
@@ -54,29 +59,41 @@ export function PrayerWidget({ day, onPress, testID }: PrayerWidgetProps) {
     );
   }, [day, clockTick]);
 
+  const current = useMemo(() => {
+    if (!day) {
+      return null;
+    }
+    return findCurrentPrayer(
+      day.prayers.map(({ prayer, time }) => ({ prayer, time })),
+      clockTick,
+    );
+  }, [day, clockTick]);
+
   const progress = useMemo(() => {
     if (!day) {
       return 0;
     }
-    if (next === null) {
+    // Elapsed share of the active window (start -> next prayer start).
+    // Before Fajr nothing started (0); Isha's open-ended window reads as
+    // a complete day (1).
+    if (current === null) {
+      return 0;
+    }
+    const currentIndex = PRAYERS.indexOf(current);
+    const currentEntry = day.prayers[currentIndex];
+    const endEntry = day.prayers[currentIndex + 1];
+    if (!currentEntry || !endEntry) {
       return 1;
     }
-    const nextIndex = PRAYERS.indexOf(next);
-    const nextEntry = day.prayers[nextIndex];
-    // Previous interval start: the previous prayer's time, or midnight
-    // before Fajr.
-    const prevMinutes =
-      nextIndex === 0
-        ? 0
-        : (wallClockToMinutes(day.prayers[nextIndex - 1].time) ?? 0);
-    const nextMinutes = wallClockToMinutes(nextEntry.time) ?? 0;
+    const startMinutes = wallClockToMinutes(currentEntry.time) ?? 0;
+    const endMinutes = wallClockToMinutes(endEntry.time) ?? 0;
     const nowMinutes = wallClockToMinutes(clockTick) ?? 0;
-    const span = nextMinutes - prevMinutes;
+    const span = endMinutes - startMinutes;
     if (span <= 0) {
       return 0;
     }
-    return Math.min(Math.max((nowMinutes - prevMinutes) / span, 0), 1);
-  }, [day, next, clockTick]);
+    return Math.min(Math.max((nowMinutes - startMinutes) / span, 0), 1);
+  }, [day, current, clockTick]);
 
   useEffect(() => {
     progressAnim.value = withTiming(progress, { duration: 900 });
@@ -91,8 +108,17 @@ export function PrayerWidget({ day, onPress, testID }: PrayerWidgetProps) {
   }
 
   const prayedCount = day.prayers.filter((entry) => entry.status === 'prayed').length;
+  // Focus entry: the active window's prayer; before Fajr (no active
+  // prayer yet) the upcoming one. Its countdown runs to the window end,
+  // or to its start when nothing is active yet.
+  const activeEntry = current ? day.prayers.find((entry) => entry.prayer === current) : undefined;
   const nextEntry = next ? day.prayers.find((entry) => entry.prayer === next) : undefined;
-  const nextIsDay = nextEntry ? isDayPrayer(nextEntry.prayer) : false;
+  const focusEntry = activeEntry ?? nextEntry;
+  const windowEnd =
+    activeEntry && current ? (day.prayers[PRAYERS.indexOf(current) + 1]?.time ?? null) : null;
+  const timerTarget = windowEnd ?? (!activeEntry ? nextEntry?.time : undefined);
+  const focusIsDay = focusEntry ? isDayPrayer(focusEntry.prayer) : false;
+  const activePrayer = current ?? next;
 
   return (
     <Animated.View entering={FadeInUp.duration(450).delay(80)}>
@@ -105,32 +131,39 @@ export function PrayerWidget({ day, onPress, testID }: PrayerWidgetProps) {
         <View style={styles.topRow}>
           <View style={styles.iconBadge}>
             <Ionicons
-              name={nextIsDay ? 'sunny-outline' : 'moon-outline'}
+              name={focusIsDay ? 'sunny-outline' : 'moon-outline'}
               size={IconSize.md}
-              color={Colors.heroText}
+              color={colors.heroText}
             />
           </View>
           <View style={styles.topText}>
             <AppText variant="label" style={styles.kicker}>
-              {t('dashboard.prayerNextKicker')}
+              {activeEntry ? t('dashboard.prayerNowKicker') : t('dashboard.prayerNextKicker')}
             </AppText>
             <AppText variant="caption" style={styles.muted}>
               {t('prayer.daySummary', { prayed: prayedCount, total: day.prayers.length })}
             </AppText>
           </View>
-          <Ionicons name="chevron-forward" size={IconSize.md} color={Colors.heroMuted} />
+          <Ionicons name="chevron-forward" size={IconSize.md} color={colors.heroMuted} />
         </View>
 
-        {nextEntry ? (
+        {focusEntry ? (
           <View style={styles.nextRow}>
             <AppText variant="heroValue" style={styles.nextName}>
-              {t(`prayer.names.${nextEntry.prayer}`)}
+              {t(`prayer.names.${focusEntry.prayer}`)}
             </AppText>
             <View style={styles.nextTime}>
               <AppText variant="heading" style={styles.timeText}>
-                {formatWallClock12(nextEntry.time, locale)}
+                {windowEnd
+                  ? t('prayer.timeWindow', {
+                      start: formatWallClock12(focusEntry.time, locale),
+                      end: formatWallClock12(windowEnd, locale),
+                    })
+                  : formatWallClock12(focusEntry.time, locale)}
               </AppText>
-              <LiveTimer targetTime={nextEntry.time} testID="dashboard-prayer-timer" />
+              {timerTarget ? (
+                <LiveTimer targetTime={timerTarget} testID="dashboard-prayer-timer" />
+              ) : null}
             </View>
           </View>
         ) : (
@@ -150,7 +183,7 @@ export function PrayerWidget({ day, onPress, testID }: PrayerWidgetProps) {
               prayer={entry.prayer}
               time={formatWallClock12(entry.time, locale)}
               status={entry.status}
-              isNext={entry.prayer === next}
+              isActive={entry.prayer === activePrayer}
             />
           ))}
         </View>
@@ -163,14 +196,16 @@ function PrayerDot({
   prayer,
   time,
   status,
-  isNext,
+  isActive,
 }: {
   prayer: PrayerName;
   time: string;
   status: 'prayed' | 'missed' | null;
-  isNext: boolean;
+  isActive: boolean;
 }) {
+  const { colors } = useAppTheme();
   const { t } = useTranslation();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const day = isDayPrayer(prayer);
   return (
     <View style={styles.dotCell}>
@@ -179,123 +214,124 @@ function PrayerDot({
           styles.dot,
           status === 'prayed' && styles.dotPrayed,
           status === 'missed' && styles.dotMissed,
-          isNext && styles.dotNext,
+          isActive && styles.dotNext,
         ]}>
         {status === 'prayed' ? (
-          <Ionicons name="checkmark" size={IconSize.sm} color={Colors.heroText} />
+          <Ionicons name="checkmark" size={IconSize.sm} color={colors.heroText} />
         ) : status === 'missed' ? (
-          <Ionicons name="close" size={IconSize.sm} color={Colors.heroText} />
+          <Ionicons name="close" size={IconSize.sm} color={colors.heroText} />
         ) : (
           <Ionicons
             name={day ? 'sunny-outline' : 'moon-outline'}
             size={IconSize.sm}
-            color={day ? Colors.accentGoldSoft : Colors.heroMuted}
+            color={day ? colors.accentGoldSoft : colors.heroMuted}
           />
         )}
       </View>
-      <AppText variant="caption" style={[styles.muted, isNext && styles.nextLabel]} numberOfLines={1}>
+      <AppText variant="caption" style={[styles.muted, isActive && styles.nextLabel]} numberOfLines={1}>
         {t(`prayer.names.${prayer}`)}
       </AppText>
-      <AppText variant="caption" style={[styles.dotTime, isNext && styles.nextLabel]} numberOfLines={1}>
+      <AppText variant="caption" style={[styles.dotTime, isActive && styles.nextLabel]} numberOfLines={1}>
         {time}
       </AppText>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: Colors.primaryPressed,
-    borderRadius: Radius.xl,
-    padding: Spacing.xl,
-    gap: Spacing.md,
-  },
-  cardPressed: {
-    opacity: 0.92,
-  },
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  iconBadge: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: Colors.heroTrack,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  topText: {
-    flex: 1,
-    gap: 2,
-  },
-  kicker: {
-    color: Colors.heroText,
-  },
-  muted: {
-    color: Colors.heroMuted,
-  },
-  nextRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    gap: Spacing.sm,
-  },
-  nextName: {
-    color: Colors.heroText,
-    flex: 1,
-  },
-  nextTime: {
-    alignItems: 'flex-end',
-    gap: 2,
-  },
-  timeText: {
-    color: Colors.heroText,
-  },
-  track: {
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: Colors.heroTrack,
-    overflow: 'hidden',
-  },
-  fill: {
-    height: '100%',
-    borderRadius: 3,
-    backgroundColor: Colors.accentGoldSoft,
-  },
-  dots: {
-    flexDirection: 'row',
-    gap: Spacing.xs,
-  },
-  dotCell: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 2,
-  },
-  dot: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: Colors.heroTrack,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dotPrayed: {
-    backgroundColor: Colors.success,
-  },
-  dotMissed: {
-    backgroundColor: Colors.danger,
-  },
-  dotNext: {
-    borderWidth: 2,
-    borderColor: Colors.heroText,
-  },
-  dotTime: {
-    color: Colors.heroMuted,
-  },
-  nextLabel: {
-    color: Colors.heroText,
-    fontWeight: '600',
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    card: {
+      backgroundColor: colors.primaryPressed,
+      borderRadius: Radius.xl,
+      padding: Spacing.xl,
+      gap: Spacing.md,
+    },
+    cardPressed: {
+      opacity: 0.92,
+    },
+    topRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm,
+    },
+    iconBadge: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: colors.heroTrack,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    topText: {
+      flex: 1,
+      gap: 2,
+    },
+    kicker: {
+      color: colors.heroText,
+    },
+    muted: {
+      color: colors.heroMuted,
+    },
+    nextRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-end',
+      justifyContent: 'space-between',
+      gap: Spacing.sm,
+    },
+    nextName: {
+      color: colors.heroText,
+      flex: 1,
+    },
+    nextTime: {
+      alignItems: 'flex-end',
+      gap: 2,
+    },
+    timeText: {
+      color: colors.heroText,
+    },
+    track: {
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: colors.heroTrack,
+      overflow: 'hidden',
+    },
+    fill: {
+      height: '100%',
+      borderRadius: 3,
+      backgroundColor: colors.accentGoldSoft,
+    },
+    dots: {
+      flexDirection: 'row',
+      gap: Spacing.xs,
+    },
+    dotCell: {
+      flex: 1,
+      alignItems: 'center',
+      gap: 2,
+    },
+    dot: {
+      width: 26,
+      height: 26,
+      borderRadius: 13,
+      backgroundColor: colors.heroTrack,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    dotPrayed: {
+      backgroundColor: colors.success,
+    },
+    dotMissed: {
+      backgroundColor: colors.danger,
+    },
+    dotNext: {
+      borderWidth: 2,
+      borderColor: colors.heroText,
+    },
+    dotTime: {
+      color: colors.heroMuted,
+    },
+    nextLabel: {
+      color: colors.heroText,
+      fontWeight: '600',
+    },
+  });

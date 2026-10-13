@@ -11,10 +11,12 @@ import { BudgetRow } from '@/features/finance/components/budget-row';
 import { monthKeyLabel } from '@/features/finance/format';
 import { useBudgets } from '@/features/finance/hooks/use-budgets';
 import { useTranslation } from '@/i18n';
-import { Colors, Spacing } from '@/theme/tokens';
+import { Spacing } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
 import type { BudgetWithUsage } from '@/types/finance';
 
 export default function FinanceBudgetsScreen() {
+  const { colors } = useAppTheme();
   const { t, locale } = useTranslation();
   const { budgets, monthKey, loading, refreshing, error, refresh } = useBudgets();
 
@@ -47,8 +49,8 @@ export default function FinanceBudgetsScreen() {
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={refresh}
-                tintColor={Colors.primary}
-                colors={[Colors.primary]}
+                tintColor={colors.primary}
+                colors={[colors.primary]}
               />
             }
             ListHeaderComponent={

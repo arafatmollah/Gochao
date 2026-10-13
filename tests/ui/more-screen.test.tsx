@@ -21,6 +21,26 @@ describe('MoreScreen', () => {
     mockPush.mockClear();
   });
 
+  it('opens universal search from the top search bar', async () => {
+    await render(<MoreScreen />);
+
+    expect(screen.getByTestId('more-search-entry')).toBeTruthy();
+
+    await fireEvent.press(screen.getByTestId('more-search-entry'));
+    expect(mockPush).toHaveBeenCalledWith('/search');
+  });
+
+  it('lists every theme with a selectable row', async () => {
+    await render(<MoreScreen />);
+
+    for (const id of ['default', 'dark', 'light', 'anime', 'loki', 'ironman', 'strange']) {
+      expect(screen.getByTestId(`theme-option-${id}`)).toBeTruthy();
+    }
+    // Switching outside a provider is a safe no-op render.
+    await fireEvent.press(screen.getByTestId('theme-option-dark'));
+    expect(screen.getByTestId('theme-option-dark')).toBeTruthy();
+  });
+
   it('links to the live family module', async () => {
     await render(<MoreScreen />);
 

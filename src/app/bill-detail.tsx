@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { useMemo } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/app-text';
@@ -16,11 +17,15 @@ import { BILL_CATEGORY_ICONS } from '@/features/bills/meta';
 import { useBillDetail } from '@/features/bills/hooks/use-bill-detail';
 import { formatIsoDateDisplay, formatMoney } from '@/i18n/format';
 import { useTranslation } from '@/i18n';
-import { Colors, IconSize, Spacing } from '@/theme/tokens';
+import { IconSize, Spacing } from '@/theme/tokens';
+import type { ThemeColors } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
 import type { BillOccurrence } from '@/types/bill';
 import { todayIsoDate } from '@/utils/dates';
 
 export default function BillDetailScreen() {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { t, locale } = useTranslation();
   const params = useLocalSearchParams<{ id?: string }>();
   const billId = typeof params.id === 'string' && params.id.length > 0 ? params.id : undefined;
@@ -111,7 +116,7 @@ export default function BillDetailScreen() {
                   <Ionicons
                     name={BILL_CATEGORY_ICONS[bill.category]}
                     size={IconSize.lg}
-                    color={Colors.primary}
+                    color={colors.primary}
                   />
                 </View>
                 <View style={styles.identityBody}>
@@ -122,8 +127,8 @@ export default function BillDetailScreen() {
                     {bill.isArchived ? (
                       <Badge
                         label={t('bills.list.archived')}
-                        color={Colors.textMuted}
-                        backgroundColor={Colors.surfaceMuted}
+                        color={colors.textMuted}
+                        backgroundColor={colors.surfaceMuted}
                       />
                     ) : null}
                   </View>
@@ -206,7 +211,7 @@ export default function BillDetailScreen() {
               onPress={handleDelete}
               disabled={deleteBlocked || detail.busy}
               fullWidth
-              icon={<Ionicons name="trash-outline" size={IconSize.sm} color={Colors.danger} />}
+              icon={<Ionicons name="trash-outline" size={IconSize.sm} color={colors.danger} />}
               testID="bill-delete-button"
             />
             {deleteBlocked ? (
@@ -251,6 +256,8 @@ export default function BillDetailScreen() {
 }
 
 function InfoRow({ label, value }: { label: string; value: string }) {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.infoRow}>
       <AppText variant="caption" color="textSecondary">
@@ -263,7 +270,7 @@ function InfoRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   content: {
     padding: Spacing.lg,
     paddingBottom: Spacing.xxxl,
@@ -281,7 +288,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: Colors.primarySoft,
+    backgroundColor: colors.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -1,8 +1,11 @@
+import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/app-text';
 import { useTranslation, formatNumber } from '@/i18n';
-import { Colors, Radius, Spacing } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
+import { Radius, Spacing } from '@/theme/tokens';
+import type { ThemeColors } from '@/theme/tokens';
 
 import type { DashboardSummary } from '../summary';
 
@@ -17,7 +20,9 @@ export interface HeroCardProps {
  * via `DashboardSummary`.
  */
 export function HeroCard({ summary, testID }: HeroCardProps) {
+  const { colors } = useAppTheme();
   const { t, locale } = useTranslation();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const hasToday = summary.todayTotal > 0;
   const percent = Math.round(summary.progress * 100);
 
@@ -70,73 +75,74 @@ export function HeroCard({ summary, testID }: HeroCardProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: Colors.hero,
-    borderRadius: Radius.xl,
-    padding: Spacing.xl,
-    gap: Spacing.xs,
-  },
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.sm,
-    marginBottom: Spacing.xs,
-  },
-  kicker: {
-    color: Colors.heroMuted,
-  },
-  badge: {
-    backgroundColor: Colors.heroTrack,
-    borderRadius: Radius.pill,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 3,
-  },
-  badgeText: {
-    color: Colors.heroText,
-    fontWeight: '600',
-  },
-  value: {
-    color: Colors.heroText,
-  },
-  subCaption: {
-    color: Colors.heroMuted,
-    marginBottom: Spacing.md,
-  },
-  track: {
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: Colors.heroTrack,
-    overflow: 'hidden',
-  },
-  fill: {
-    height: '100%',
-    borderRadius: 3,
-    backgroundColor: Colors.heroText,
-  },
-  columns: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: Spacing.md,
-  },
-  column: {
-    flex: 1,
-    gap: 2,
-  },
-  columnDivider: {
-    width: StyleSheet.hairlineWidth,
-    alignSelf: 'stretch',
-    backgroundColor: Colors.heroTrack,
-    marginHorizontal: Spacing.md,
-  },
-  columnLabel: {
-    color: Colors.heroMuted,
-  },
-  overdueValue: {
-    color: Colors.heroNegative,
-  },
-  dueTodayValue: {
-    color: Colors.heroPositive,
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    card: {
+      backgroundColor: colors.hero,
+      borderRadius: Radius.xl,
+      padding: Spacing.xl,
+      gap: Spacing.xs,
+    },
+    topRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: Spacing.sm,
+      marginBottom: Spacing.xs,
+    },
+    kicker: {
+      color: colors.heroMuted,
+    },
+    badge: {
+      backgroundColor: colors.heroTrack,
+      borderRadius: Radius.pill,
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: 3,
+    },
+    badgeText: {
+      color: colors.heroText,
+      fontWeight: '600',
+    },
+    value: {
+      color: colors.heroText,
+    },
+    subCaption: {
+      color: colors.heroMuted,
+      marginBottom: Spacing.md,
+    },
+    track: {
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: colors.heroTrack,
+      overflow: 'hidden',
+    },
+    fill: {
+      height: '100%',
+      borderRadius: 3,
+      backgroundColor: colors.heroText,
+    },
+    columns: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: Spacing.md,
+    },
+    column: {
+      flex: 1,
+      gap: 2,
+    },
+    columnDivider: {
+      width: StyleSheet.hairlineWidth,
+      alignSelf: 'stretch',
+      backgroundColor: colors.heroTrack,
+      marginHorizontal: Spacing.md,
+    },
+    columnLabel: {
+      color: colors.heroMuted,
+    },
+    overdueValue: {
+      color: colors.heroNegative,
+    },
+    dueTodayValue: {
+      color: colors.heroPositive,
+    },
+  });

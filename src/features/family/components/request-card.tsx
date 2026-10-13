@@ -6,7 +6,8 @@ import { Card } from '@/components/card';
 import { requestCategoryLabelKey, requestStatusLabelKey } from '@/features/family/meta';
 import { useTranslation } from '@/i18n';
 import { formatIsoDateDisplay, formatMoney } from '@/i18n/format';
-import { Colors, PriorityColors, Spacing } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
+import { Spacing, priorityColors } from '@/theme/tokens';
 import type { FamilyRequestListItem } from '@/types/family';
 
 export interface RequestCardProps {
@@ -20,8 +21,9 @@ export interface RequestCardProps {
  * snippet, category, member, deadline, and estimated cost.
  */
 export function RequestCard({ request, onPress, testID }: RequestCardProps) {
+  const { colors } = useAppTheme();
   const { t, locale } = useTranslation();
-  const priorityTone = PriorityColors[request.priority];
+  const priorityTone = priorityColors(colors)[request.priority];
 
   return (
     <Card onPress={onPress} testID={testID} accessibilityLabel={request.title} style={styles.card}>
@@ -46,8 +48,8 @@ export function RequestCard({ request, onPress, testID }: RequestCardProps) {
       <View style={styles.metaRow}>
         <Badge
           label={t(requestCategoryLabelKey(request.category))}
-          color={Colors.textSecondary}
-          backgroundColor={Colors.surfaceMuted}
+          color={colors.textSecondary}
+          backgroundColor={colors.surfaceMuted}
         />
         {request.memberName ? (
           <AppText variant="caption" color="textSecondary" numberOfLines={1}>

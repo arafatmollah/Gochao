@@ -132,6 +132,27 @@ export function findNextPrayer(times: PrayerTime[], nowTime: string): PrayerName
   return null;
 }
 
+/**
+ * Finds the currently active prayer: the last prayer whose start time has
+ * passed given today's times and the current local time (`HH:mm`). Before
+ * Fajr there is no active prayer (`null`); after Isha the active prayer
+ * stays Isha until tomorrow's Fajr.
+ */
+export function findCurrentPrayer(times: PrayerTime[], nowTime: string): PrayerName | null {
+  const nowMinutes = wallClockToMinutes(nowTime);
+  if (nowMinutes === null) {
+    return null;
+  }
+  let current: PrayerName | null = null;
+  for (const entry of times) {
+    const minutes = wallClockToMinutes(entry.time);
+    if (minutes !== null && minutes <= nowMinutes) {
+      current = entry.prayer;
+    }
+  }
+  return current;
+}
+
 /** Whole minutes from `fromTime` until `toTime` (both `HH:mm`). */
 export function minutesUntil(fromTime: string, toTime: string): number | null {
   const from = wallClockToMinutes(fromTime);
@@ -140,4 +161,19 @@ export function minutesUntil(fromTime: string, toTime: string): number | null {
     return null;
   }
   return to - from;
+}
+
+/**
+ * End of a prayer's availability window: the next prayer's start time, so
+ * e.g. Dhuhr at `11:45` followed by Asr at `15:45` is available `11:45`
+ * until `15:45`. The day's last prayer has no end inside today's schedule
+ * (its window runs into tomorrow's Fajr), reported as `null` so the UI
+ * shows just its start time. Unknown prayers also yield `null`.
+ */
+export function prayerWindowEnd(times: PrayerTime[], prayer: PrayerName): string | null {
+  const index = times.findIndex((entry) => entry.prayer === prayer);
+  if (index < 0) {
+    return null;
+  }
+  return times[index + 1]?.time ?? null;
 }

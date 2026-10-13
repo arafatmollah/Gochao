@@ -6,12 +6,27 @@ import { Platform, StyleSheet, View } from 'react-native';
 
 import { ErrorState } from '@/components/error-state';
 import { LoadingState } from '@/components/loading-state';
+import { NotificationBootstrap } from '@/components/notification-bootstrap';
 import { DATABASE_NAME, initializeDatabase } from '@/db/database';
 import { I18nProvider } from '@/i18n';
 import { Colors, Spacing } from '@/theme/tokens';
+import { AppThemeProvider, useAppTheme } from '@/theme/theme-context';
+import { THEME_STATUS_BAR } from '@/theme/themes';
+
+function navigateToNotificationUrl(url?: unknown) {
+  if (url === '/prayer') {
+    router.push('/prayer');
+  } else if (url === '/tasks') {
+    router.push('/tasks');
+  } else if (url === '/about-update') {
+    router.push('/about-update');
+  } else if (url === '/') {
+    router.push('/');
+  }
+}
 
 /**
- * Foreground banner behavior + tap-to-open for prayer reminders. Native
+ * Foreground banner behavior + tap-to-open for reminders. Native
  * only: `expo-notifications` has no web implementation, so the module is
  * dynamically imported behind a platform check and the web bundle never
  * evaluates it.
@@ -27,15 +42,21 @@ function useNotificationObserver() {
         handleNotification: async () => ({
           shouldShowBanner: true,
           shouldShowList: true,
-          shouldPlaySound: false,
+          shouldPlaySound: true,
           shouldSetBadge: false,
         }),
       });
-      subscription = Notifications.addNotificationResponseReceivedListener((response) => {
-        const url = response.notification.request.content.data?.url;
-        if (typeof url === 'string' && url === '/prayer') {
-          router.push('/prayer');
+
+      // Handle notification tap that launched the app from a killed state
+      void Notifications.getLastNotificationResponseAsync().then((response) => {
+        if (response) {
+          navigateToNotificationUrl(response.notification.request.content.data?.url);
         }
+      });
+
+      // Handle notification tap received while the app is active / backgrounded
+      subscription = Notifications.addNotificationResponseReceivedListener((response) => {
+        navigateToNotificationUrl(response.notification.request.content.data?.url);
       });
     }).catch(() => {
       // Notifications unavailable: the app works fully without them.
@@ -81,21 +102,6 @@ export default function RootLayout() {
     setInitAttempt((attempt) => attempt + 1);
   }, []);
 
-  const navigationTheme = useMemo(
-    () => ({
-      ...DefaultTheme,
-      colors: {
-        ...DefaultTheme.colors,
-        primary: Colors.primary,
-        background: Colors.background,
-        card: Colors.background,
-        text: Colors.text,
-        border: Colors.border,
-      },
-    }),
-    [],
-  );
-
   // The startup overlay hides only once the database AND the persisted
   // language preference are resolved, so a saved Bangla preference never
   // flashes the English shell. This screen is intentionally English: it runs
@@ -103,8 +109,7 @@ export default function RootLayout() {
   const showOverlay = !dbReady || !i18nReady;
 
   return (
-    <ThemeProvider value={navigationTheme}>
-      <StatusBar style="dark" />
+    <>
       {dbError ? (
         <View style={styles.center}>
           <ErrorState
@@ -122,49 +127,11 @@ export default function RootLayout() {
             onInit={initializeDatabase}
             onError={reportDbError}>
             <I18nProvider onReady={markI18nReady}>
-              <DatabaseReady onReady={markDbReady} />
-              <Stack
-                screenOptions={{
-                  headerStyle: { backgroundColor: Colors.background },
-                  headerTintColor: Colors.text,
-                  headerShadowVisible: false,
-                  contentStyle: { backgroundColor: Colors.background },
-                }}>
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen name="family" options={{ headerShown: false }} />
-                <Stack.Screen name="health" options={{ headerShown: false }} />
-                <Stack.Screen name="task-form" options={{ presentation: 'modal' }} />
-                <Stack.Screen name="bill-form" options={{ presentation: 'modal' }} />
-                <Stack.Screen name="bill-pay" options={{ presentation: 'modal' }} />
-                <Stack.Screen name="bill-detail" />
-                <Stack.Screen name="finance-accounts" />
-                <Stack.Screen name="account-form" options={{ presentation: 'modal' }} />
-                <Stack.Screen name="finance-transactions" />
-                <Stack.Screen name="transaction-form" options={{ presentation: 'modal' }} />
-                <Stack.Screen name="finance-transfer" options={{ presentation: 'modal' }} />
-                <Stack.Screen name="finance-budgets" />
-                <Stack.Screen name="budget-form" options={{ presentation: 'modal' }} />
-                <Stack.Screen name="finance-reports" />
-                <Stack.Screen name="finance-categories" />
-                <Stack.Screen name="category-form" options={{ presentation: 'modal' }} />
-                <Stack.Screen name="grocery" />
-                <Stack.Screen name="grocery-detail" />
-                <Stack.Screen name="grocery-list-form" options={{ presentation: 'modal' }} />
-                <Stack.Screen name="grocery-item-form" options={{ presentation: 'modal' }} />
-                <Stack.Screen name="prayer" />
-                <Stack.Screen name="prayer-settings" />
-                <Stack.Screen name="prayer-history" />
-                <Stack.Screen name="health" />
-                <Stack.Screen name="medicine-form" options={{ presentation: 'modal' }} />
-                <Stack.Screen name="appointment-form" options={{ presentation: 'modal' }} />
-                <Stack.Screen name="health-note-form" options={{ presentation: 'modal' }} />
-                <Stack.Screen name="entertainment" />
-                <Stack.Screen name="entertainment-form" options={{ presentation: 'modal' }} />
-                <Stack.Screen name="about" options={{ headerShown: false }} />
-                <Stack.Screen name="about-version-history" options={{ headerShown: false }} />
-                <Stack.Screen name="about-terms" options={{ headerShown: false }} />
-                <Stack.Screen name="about-privacy" options={{ headerShown: false }} />
-              </Stack>
+              <AppThemeProvider>
+                <DatabaseReady onReady={markDbReady} />
+                <NotificationBootstrap />
+                <ThemedShell />
+              </AppThemeProvider>
             </I18nProvider>
           </SQLiteProvider>
           {showOverlay && (
@@ -174,6 +141,79 @@ export default function RootLayout() {
           )}
         </>
       )}
+    </>
+  );
+}
+
+/**
+ * Everything that reads the active palette lives here, under the theme
+ * provider: the navigation theme, the status bar, and the route stack.
+ */
+function ThemedShell() {
+  const { colors, theme } = useAppTheme();
+
+  const navigationTheme = useMemo(
+    () => ({
+      ...DefaultTheme,
+      colors: {
+        ...DefaultTheme.colors,
+        primary: colors.primary,
+        background: colors.background,
+        card: colors.background,
+        text: colors.text,
+        border: colors.border,
+      },
+    }),
+    [colors],
+  );
+
+  return (
+    <ThemeProvider value={navigationTheme}>
+      <StatusBar style={THEME_STATUS_BAR[theme]} />
+      <Stack
+        screenOptions={{
+          headerStyle: { backgroundColor: colors.background },
+          headerTintColor: colors.text,
+          headerShadowVisible: false,
+          contentStyle: { backgroundColor: colors.background },
+        }}>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="family" options={{ headerShown: false }} />
+        <Stack.Screen name="health" options={{ headerShown: false }} />
+        <Stack.Screen name="task-form" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="bill-form" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="bill-pay" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="bill-detail" />
+        <Stack.Screen name="finance-accounts" />
+        <Stack.Screen name="account-form" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="finance-transactions" />
+        <Stack.Screen name="transaction-form" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="finance-transfer" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="finance-budgets" />
+        <Stack.Screen name="budget-form" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="finance-reports" />
+        <Stack.Screen name="finance-categories" />
+        <Stack.Screen name="category-form" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="grocery" />
+        <Stack.Screen name="grocery-detail" />
+        <Stack.Screen name="grocery-list-form" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="grocery-item-form" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="prayer" />
+        <Stack.Screen name="prayer-settings" />
+        <Stack.Screen name="prayer-history" />
+        <Stack.Screen name="health" />
+        <Stack.Screen name="medicine-form" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="appointment-form" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="health-note-form" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="entertainment" />
+        <Stack.Screen name="entertainment-form" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="about" options={{ headerShown: false }} />
+        <Stack.Screen name="about-update" options={{ headerShown: false }} />
+        <Stack.Screen name="about-version-history" options={{ headerShown: false }} />
+        <Stack.Screen name="about-terms" options={{ headerShown: false }} />
+        <Stack.Screen name="about-privacy" options={{ headerShown: false }} />
+        <Stack.Screen name="search" options={{ headerShown: false }} />
+      </Stack>
     </ThemeProvider>
   );
 }

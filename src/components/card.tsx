@@ -1,7 +1,10 @@
 import type { ReactNode } from 'react';
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { CardShadow, Colors, Radius, Spacing } from '@/theme/tokens';
+import { CardShadow, Radius, Spacing } from '@/theme/tokens';
+import type { ThemeColors } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
 
 export interface CardProps {
   children: ReactNode;
@@ -12,6 +15,8 @@ export interface CardProps {
 }
 
 export function Card({ children, onPress, style, accessibilityLabel, testID }: CardProps) {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   if (onPress) {
     return (
       <Pressable
@@ -31,14 +36,15 @@ export function Card({ children, onPress, style, accessibilityLabel, testID }: C
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
-    padding: Spacing.lg,
-    ...CardShadow,
-  },
-  pressed: {
-    backgroundColor: Colors.surfaceMuted,
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    card: {
+      backgroundColor: colors.surface,
+      borderRadius: Radius.lg,
+      padding: Spacing.lg,
+      ...CardShadow,
+    },
+    pressed: {
+      backgroundColor: colors.surfaceMuted,
+    },
+  });

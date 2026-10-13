@@ -4,6 +4,8 @@ import type { SqlDatabase } from '../sql';
 
 /** Key under which the language preference lives in `app_settings`. */
 export const LANGUAGE_SETTING_KEY = 'language';
+/** Key under which the theme id lives in `app_settings`. */
+export const THEME_SETTING_KEY = 'theme';
 
 export interface SettingsRepository {
   get(key: string): Promise<string | null>;

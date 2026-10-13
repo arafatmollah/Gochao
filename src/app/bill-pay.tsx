@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/app-text';
@@ -18,11 +18,15 @@ import { useBillPay } from '@/features/bills/hooks/use-bill-pay';
 import { translateValidationCode } from '@/i18n/errors';
 import { formatIsoDateDisplay, formatIsoDateRelative, formatMoney } from '@/i18n/format';
 import { useTranslation } from '@/i18n';
-import { Colors, IconSize, Spacing } from '@/theme/tokens';
+import { IconSize, Spacing } from '@/theme/tokens';
+import type { ThemeColors } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
 import { isValidIsoDate, parseIsoDate, toIsoDate, todayIsoDate, addDaysIsoDate } from '@/utils/dates';
 import { normalizeDigitInput } from '@/utils/money';
 
 export default function BillPayScreen() {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { t, locale } = useTranslation();
   const params = useLocalSearchParams<{ occurrenceId?: string }>();
   const occurrenceId =
@@ -97,7 +101,7 @@ export default function BillPayScreen() {
                     <Ionicons
                       name={BILL_CATEGORY_ICONS[occurrence.billCategory]}
                       size={IconSize.md}
-                      color={Colors.primary}
+                      color={colors.primary}
                     />
                   </View>
                   <View style={styles.contextBody}>
@@ -163,7 +167,7 @@ export default function BillPayScreen() {
                     variant="secondary"
                     size="sm"
                     onPress={openDatePicker}
-                    icon={<Ionicons name="calendar-outline" size={IconSize.sm} color={Colors.text} />}
+                    icon={<Ionicons name="calendar-outline" size={IconSize.sm} color={colors.text} />}
                     testID="pay-pick-date-button"
                   />
                 ) : null}
@@ -231,7 +235,7 @@ export default function BillPayScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   flex: {
     flex: 1,
   },
@@ -252,7 +256,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: Colors.primarySoft,
+    backgroundColor: colors.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
   },

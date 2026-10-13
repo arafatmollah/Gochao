@@ -1,11 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/app-text';
 import { Badge } from '@/components/badge';
 import { formatIsoDateRelative } from '@/i18n/format';
 import { useTranslation } from '@/i18n';
-import { CardShadow, Colors, IconSize, PriorityColors, Radius, Spacing } from '@/theme/tokens';
+import { CardShadow, IconSize, Radius, Spacing, priorityColors } from '@/theme/tokens';
+import type { ThemeColors } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
 import type { Task } from '@/types/task';
 
 export interface TaskItemProps {
@@ -16,10 +19,12 @@ export interface TaskItemProps {
 }
 
 export function TaskItem({ task, today, onPress, onToggle }: TaskItemProps) {
+  const { colors } = useAppTheme();
   const { t } = useTranslation();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const isCompleted = task.status === 'completed';
-  const dueTone = dueDateTone(task, today);
-  const priorityColors = PriorityColors[task.priority];
+  const dueTone = dueDateTone(task, today, colors);
+  const taskPriorityColors = priorityColors(colors)[task.priority];
 
   return (
     <View style={styles.card}>
@@ -38,7 +43,7 @@ export function TaskItem({ task, today, onPress, onToggle }: TaskItemProps) {
         <Ionicons
           name={isCompleted ? 'checkmark-circle' : 'ellipse-outline'}
           size={IconSize.lg}
-          color={isCompleted ? Colors.primary : Colors.borderStrong}
+          color={isCompleted ? colors.primary : colors.borderStrong}
         />
       </Pressable>
 
@@ -64,7 +69,7 @@ export function TaskItem({ task, today, onPress, onToggle }: TaskItemProps) {
               label={t('tasks.item.completedRelative', {
                 relative: formatIsoDateRelative(task.completedAt.slice(0, 10), today, t),
               })}
-              color={Colors.textMuted}
+              color={colors.textMuted}
             />
           ) : task.dueAt ? (
             <MetaItem
@@ -75,14 +80,14 @@ export function TaskItem({ task, today, onPress, onToggle }: TaskItemProps) {
           ) : null}
 
           {task.description ? (
-            <MetaItem icon="document-text-outline" label={t('tasks.item.notes')} color={Colors.textMuted} />
+            <MetaItem icon="document-text-outline" label={t('tasks.item.notes')} color={colors.textMuted} />
           ) : null}
 
           {!isCompleted ? (
             <Badge
               label={t(`priority.${task.priority}`)}
-              color={priorityColors.fg}
-              backgroundColor={priorityColors.bg}
+              color={taskPriorityColors.fg}
+              backgroundColor={taskPriorityColors.bg}
             />
           ) : null}
         </View>
@@ -91,17 +96,17 @@ export function TaskItem({ task, today, onPress, onToggle }: TaskItemProps) {
   );
 }
 
-function dueDateTone(task: Task, today: string): string {
+function dueDateTone(task: Task, today: string, colors: ThemeColors): string {
   if (!task.dueAt) {
-    return Colors.textMuted;
+    return colors.textMuted;
   }
   if (task.dueAt < today) {
-    return Colors.danger;
+    return colors.danger;
   }
   if (task.dueAt === today) {
-    return Colors.warning;
+    return colors.warning;
   }
-  return Colors.textSecondary;
+  return colors.textSecondary;
 }
 
 function MetaItem({
@@ -113,6 +118,8 @@ function MetaItem({
   label: string;
   color: string;
 }) {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.metaItem}>
       <Ionicons name={icon} size={IconSize.sm - 2} color={color} />
@@ -123,42 +130,43 @@ function MetaItem({
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Spacing.sm,
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
-    paddingVertical: Spacing.md,
-    paddingLeft: Spacing.sm,
-    paddingRight: Spacing.md,
-    ...CardShadow,
-  },
-  checkbox: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  body: {
-    flex: 1,
-    gap: Spacing.xs,
-    paddingTop: Spacing.sm,
-    minHeight: 40,
-  },
-  completedTitle: {
-    textDecorationLine: 'line-through',
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: Spacing.md,
-  },
-  metaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    card: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: Spacing.sm,
+      backgroundColor: colors.surface,
+      borderRadius: Radius.lg,
+      paddingVertical: Spacing.md,
+      paddingLeft: Spacing.sm,
+      paddingRight: Spacing.md,
+      ...CardShadow,
+    },
+    checkbox: {
+      width: 40,
+      height: 40,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    body: {
+      flex: 1,
+      gap: Spacing.xs,
+      paddingTop: Spacing.sm,
+      minHeight: 40,
+    },
+    completedTitle: {
+      textDecorationLine: 'line-through',
+    },
+    metaRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      gap: Spacing.md,
+    },
+    metaItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.xs,
+    },
+  });

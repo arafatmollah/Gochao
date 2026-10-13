@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { useMemo } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -24,9 +25,13 @@ import {
 } from '@/features/health/hooks/use-appointment-form';
 import { translateValidationCode } from '@/i18n/errors';
 import { useTranslation } from '@/i18n';
-import { Colors, IconSize, Spacing } from '@/theme/tokens';
+import { IconSize, Spacing } from '@/theme/tokens';
+import type { ThemeColors } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
 
 export default function AppointmentFormScreen() {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { t } = useTranslation();
   const params = useLocalSearchParams<{ id?: string }>();
   const appointmentId =
@@ -194,7 +199,7 @@ export default function AppointmentFormScreen() {
                     loading={form.deleting}
                     disabled={form.saving}
                     fullWidth
-                    icon={<Ionicons name="trash-outline" size={IconSize.sm} color={Colors.danger} />}
+                    icon={<Ionicons name="trash-outline" size={IconSize.sm} color={colors.danger} />}
                     testID="delete-visit-button"
                   />
                 </View>
@@ -207,7 +212,7 @@ export default function AppointmentFormScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   flex: {
     flex: 1,
   },
@@ -229,7 +234,7 @@ const styles = StyleSheet.create({
   },
   destructiveZone: {
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: colors.border,
     paddingTop: Spacing.lg,
     marginTop: Spacing.sm,
   },

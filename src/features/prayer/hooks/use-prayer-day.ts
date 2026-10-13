@@ -6,7 +6,7 @@ import { SqlitePrayerRepository } from '@/db/repositories/prayer-repository';
 import { toSqlDatabase } from '@/db/sqlite-adapter';
 import { useTranslation } from '@/i18n';
 import { translateError } from '@/i18n/errors';
-import { findNextPrayer, minutesUntil, nowWallClock } from '@/services/prayer-calculation';
+import { findCurrentPrayer, findNextPrayer, minutesUntil, nowWallClock, prayerWindowEnd } from '@/services/prayer-calculation';
 import { createPrayerService } from '@/services/prayer-service';
 import type { PrayerDay, PrayerName, PrayerStatus } from '@/types/prayer';
 import { todayIsoDate } from '@/utils/dates';
@@ -18,11 +18,24 @@ export interface NextPrayerInfo {
   minutesLeft: number;
 }
 
+export interface CurrentPrayerInfo {
+  prayer: PrayerName;
+  /** This prayer's start time (wall-clock `HH:mm`). */
+  time: string;
+  /**
+   * End of the availability window (the next prayer's start), or null for
+   * the day's last prayer whose window runs into tomorrow's Fajr.
+   */
+  endTime: string | null;
+}
+
 export interface UsePrayerDayResult {
   date: string;
   day: PrayerDay | null;
   /** Next upcoming prayer today, or null after Isha. */
   next: NextPrayerInfo | null;
+  /** Currently active prayer window, or null before Fajr. */
+  current: CurrentPrayerInfo | null;
   prayedCount: number;
   loading: boolean;
   refreshing: boolean;
@@ -138,10 +151,27 @@ export function usePrayerDay(): UsePrayerDayResult {
     [day],
   );
 
+  const current = useMemo<CurrentPrayerInfo | null>(() => {
+    if (!day) {
+      return null;
+    }
+    const times = day.prayers.map(({ prayer, time }) => ({ prayer, time }));
+    const active = findCurrentPrayer(times, clockTick);
+    if (active === null) {
+      return null;
+    }
+    const entry = day.prayers.find((item) => item.prayer === active);
+    if (!entry) {
+      return null;
+    }
+    return { prayer: active, time: entry.time, endTime: prayerWindowEnd(times, active) };
+  }, [day, clockTick]);
+
   return {
     date,
     day,
     next,
+    current,
     prayedCount,
     loading,
     refreshing,

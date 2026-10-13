@@ -2,7 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, View } from 'react-native';
 
 import { useTranslation } from '@/i18n';
-import { Colors, IconSize, Spacing } from '@/theme/tokens';
+import { IconSize, Spacing } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
 
 import { AppText } from './app-text';
 import { Button } from './button';
@@ -22,10 +23,11 @@ export function ErrorState({
   retryLabel,
   testID,
 }: ErrorStateProps) {
+  const { colors } = useAppTheme();
   const { t } = useTranslation();
   return (
     <View style={styles.container} testID={testID} accessibilityRole="alert">
-      <Ionicons name="alert-circle-outline" size={IconSize.xl} color={Colors.danger} />
+      <Ionicons name="alert-circle-outline" size={IconSize.xl} color={colors.danger} />
       <AppText variant="subheading" align="center">
         {title ?? t('errors.title')}
       </AppText>

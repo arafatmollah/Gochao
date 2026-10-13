@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Platform } from 'react-native';
 import { useSQLiteContext } from 'expo-sqlite';
 
 import { SqlitePrayerRepository } from '@/db/repositories/prayer-repository';
@@ -66,6 +67,12 @@ export interface UsePrayerSettingsResult {
   /** Translated reminder failure, shown near the reminders section. */
   remindersError: string | null;
   toggleReminders: () => Promise<void>;
+  /** Fires an immediate test notification so the user can verify delivery. */
+  testingNotification: boolean;
+  /** Translated confirmation after a test notification is scheduled. */
+  testNotice: string | null;
+  clearTestNotice: () => void;
+  sendTestNotification: () => Promise<void>;
   /** Device GPS detection state for the "use my location" button. */
   locating: boolean;
   /** Translated locate failure, cleared on the next attempt or edit. */
@@ -115,6 +122,8 @@ export function usePrayerSettings(): UsePrayerSettingsResult {
   const [remindersEnabled, setRemindersEnabled] = useState(false);
   const [togglingReminders, setTogglingReminders] = useState(false);
   const [remindersError, setRemindersError] = useState<string | null>(null);
+  const [testingNotification, setTestingNotification] = useState(false);
+  const [testNotice, setTestNotice] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -305,6 +314,47 @@ export function usePrayerSettings(): UsePrayerSettingsResult {
     }
   }, [togglingReminders, saving, locating, remindersEnabled, service, t, locale]);
 
+  const sendTestNotification = useCallback(async () => {
+    if (togglingReminders || saving || locating || testingNotification) {
+      return;
+    }
+    setTestNotice(null);
+    setRemindersError(null);
+    setTestingNotification(true);
+    try {
+      if (Platform.OS === 'web') {
+        setRemindersError(t('prayer.remindersUnavailable'));
+        return;
+      }
+      // Lazy so the web bundle never evaluates the native module.
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const Notifications = require('expo-notifications');
+      const current = await Notifications.getPermissionsAsync();
+      let granted = current?.granted === true;
+      if (!granted) {
+        const asked = await Notifications.requestPermissionsAsync();
+        granted = asked?.granted === true;
+      }
+      if (!granted) {
+        setRemindersError(t('prayer.remindersDenied'));
+        return;
+      }
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: t('prayer.testTitle'),
+          body: t('prayer.testBody'),
+          data: { url: '/prayer' },
+        },
+        trigger: null,
+      });
+      setTestNotice(t('prayer.testSent'));
+    } catch {
+      setRemindersError(t('prayer.remindersUnavailable'));
+    } finally {
+      setTestingNotification(false);
+    }
+  }, [togglingReminders, saving, locating, testingNotification, t]);
+
   const detectLocation = useCallback(async () => {
     if (locating || saving) {
       return;
@@ -374,6 +424,10 @@ export function usePrayerSettings(): UsePrayerSettingsResult {
     togglingReminders,
     remindersError,
     toggleReminders,
+    testingNotification,
+    testNotice,
+    clearTestNotice: () => setTestNotice(null),
+    sendTestNotification,
     locating,
     locateError,
     detectLocation,

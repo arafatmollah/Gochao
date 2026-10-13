@@ -1,6 +1,7 @@
 import {
   cancelPrayerReminders,
   enablePrayerReminders,
+  PRAYER_REMINDER_CHANNEL_ID,
   reminderIdentifier,
   scheduleDailyPrayerReminders,
   type ReminderScheduler,
@@ -17,19 +18,32 @@ interface ScheduledCall {
 function makeScheduler(
   overrides: Partial<ReminderScheduler> = {},
   granted = true,
-): ReminderScheduler & { scheduled: ScheduledCall[]; cancelled: string[] } {
+): ReminderScheduler & {
+  scheduled: ScheduledCall[];
+  cancelled: string[];
+  channels: { id: string; channel: { name: string; importance: number } }[];
+  getHandlerBehavior: () => Promise<Record<string, boolean> | undefined>;
+} {
+  let registeredHandler: { handleNotification: () => Promise<Record<string, boolean>> } | undefined;
   const state = {
     scheduled: [] as ScheduledCall[],
     cancelled: [] as string[],
+    channels: [] as { id: string; channel: { name: string; importance: number } }[],
     granted,
   };
   return {
     scheduled: state.scheduled,
     cancelled: state.cancelled,
+    channels: state.channels,
+    getHandlerBehavior: async () => registeredHandler?.handleNotification(),
     getPermissionsAsync: async () => ({ granted: state.granted }),
     requestPermissionsAsync: async () => ({ granted: state.granted }),
-    setNotificationChannelAsync: async () => undefined,
-    setNotificationHandler: () => {},
+    setNotificationChannelAsync: async (id, channel) => {
+      state.channels.push({ id, channel });
+    },
+    setNotificationHandler: (handler) => {
+      registeredHandler = handler;
+    },
     scheduleNotificationAsync: async (request) => {
       const trigger = request.trigger;
       state.scheduled.push({
@@ -73,7 +87,7 @@ describe('prayer reminders', () => {
       title: 'Fajr',
       hour: 4,
       minute: 45,
-      channelId: 'prayer-times',
+      channelId: PRAYER_REMINDER_CHANNEL_ID,
     });
     expect(reminderIdentifier('isha')).toBe('jibon-prayer-isha');
   });
@@ -142,6 +156,25 @@ describe('prayer reminders', () => {
     expect(await enablePrayerReminders([...ENTRIES], broken)).toEqual({
       ok: false,
       reason: 'unavailable',
+    });
+  });
+
+  it('configures HIGH importance channel and audible foreground presentation', async () => {
+    const scheduler = makeScheduler();
+    await scheduleDailyPrayerReminders([...ENTRIES], scheduler);
+
+    expect(scheduler.channels).toEqual([
+      {
+        id: PRAYER_REMINDER_CHANNEL_ID,
+        channel: { name: 'Prayer times', importance: 6 },
+      },
+    ]);
+    const behavior = await scheduler.getHandlerBehavior();
+    expect(behavior).toMatchObject({
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
     });
   });
 });

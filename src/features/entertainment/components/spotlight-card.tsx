@@ -1,11 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/app-text';
 import { Badge } from '@/components/badge';
 import type { SpotlightWithSaved } from '@/features/entertainment/hooks/use-entertainment';
 import { useTranslation } from '@/i18n';
-import { CardShadow, Colors, IconSize, Radius, Spacing } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
+import { CardShadow, IconSize, Radius, Spacing } from '@/theme/tokens';
+import type { ThemeColors } from '@/theme/tokens';
 
 export interface SpotlightCardProps {
   entry: SpotlightWithSaved;
@@ -14,7 +17,9 @@ export interface SpotlightCardProps {
 }
 
 export function SpotlightCard({ entry, onAdd, testID }: SpotlightCardProps) {
+  const { colors } = useAppTheme();
   const { t } = useTranslation();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   return (
     <View style={styles.card} testID={testID}>
@@ -22,7 +27,7 @@ export function SpotlightCard({ entry, onAdd, testID }: SpotlightCardProps) {
         <Ionicons
           name={entry.section === 'upcoming' ? 'rocket-outline' : 'trophy-outline'}
           size={IconSize.md}
-          color={entry.section === 'upcoming' ? Colors.accentPurple : Colors.accentGold}
+          color={entry.section === 'upcoming' ? colors.accentPurple : colors.accentGold}
         />
       </View>
       <View style={styles.body}>
@@ -39,8 +44,8 @@ export function SpotlightCard({ entry, onAdd, testID }: SpotlightCardProps) {
       {entry.saved ? (
         <Badge
           label={t('entertainment.addedBadge')}
-          color={Colors.success}
-          backgroundColor={Colors.successSoft}
+          color={colors.success}
+          backgroundColor={colors.successSoft}
         />
       ) : (
         <Pressable
@@ -50,7 +55,7 @@ export function SpotlightCard({ entry, onAdd, testID }: SpotlightCardProps) {
           accessibilityLabel={`${t('entertainment.addToList')}: ${entry.title}`}
           testID={testID ? `${testID}-add` : undefined}
           style={({ pressed }) => [styles.addButton, pressed && styles.addButtonPressed]}>
-          <Ionicons name="add" size={IconSize.md} color={Colors.onPrimary} />
+          <Ionicons name="add" size={IconSize.md} color={colors.onPrimary} />
           <AppText variant="label" style={styles.addLabel}>
             {t('entertainment.addToList')}
           </AppText>
@@ -60,41 +65,42 @@ export function SpotlightCard({ entry, onAdd, testID }: SpotlightCardProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
-    padding: Spacing.lg,
-    ...CardShadow,
-  },
-  icon: {
-    width: 40,
-    height: 40,
-    borderRadius: Radius.md,
-    backgroundColor: Colors.surfaceMuted,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  body: {
-    flex: 1,
-    gap: 2,
-  },
-  addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    backgroundColor: Colors.primary,
-    borderRadius: Radius.pill,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-  },
-  addButtonPressed: {
-    backgroundColor: Colors.primaryPressed,
-  },
-  addLabel: {
-    color: Colors.onPrimary,
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    card: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.md,
+      backgroundColor: colors.surface,
+      borderRadius: Radius.lg,
+      padding: Spacing.lg,
+      ...CardShadow,
+    },
+    icon: {
+      width: 40,
+      height: 40,
+      borderRadius: Radius.md,
+      backgroundColor: colors.surfaceMuted,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    body: {
+      flex: 1,
+      gap: 2,
+    },
+    addButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.xs,
+      backgroundColor: colors.primary,
+      borderRadius: Radius.pill,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm,
+    },
+    addButtonPressed: {
+      backgroundColor: colors.primaryPressed,
+    },
+    addLabel: {
+      color: colors.onPrimary,
+    },
+  });

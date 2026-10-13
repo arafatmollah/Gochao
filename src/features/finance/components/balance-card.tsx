@@ -1,9 +1,12 @@
+import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/app-text';
 import { useTranslation } from '@/i18n';
 import { formatMoney } from '@/i18n/format';
-import { Colors, Radius, Spacing } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
+import { Radius, Spacing } from '@/theme/tokens';
+import type { ThemeColors } from '@/theme/tokens';
 import type { FinanceTotals } from '@/types/finance';
 
 export interface BalanceCardProps {
@@ -18,7 +21,9 @@ export interface BalanceCardProps {
  * database — nothing here is hardcoded (engineering rule 6).
  */
 export function BalanceCard({ totalBalanceMinor, monthTotals, testID }: BalanceCardProps) {
+  const { colors } = useAppTheme();
   const { t, locale } = useTranslation();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   return (
     <View style={styles.card} testID={testID}>
@@ -64,41 +69,42 @@ export function BalanceCard({ totalBalanceMinor, monthTotals, testID }: BalanceC
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: Colors.hero,
-    borderRadius: Radius.xl,
-    padding: Spacing.xl,
-    gap: Spacing.xs,
-  },
-  kicker: {
-    color: Colors.heroMuted,
-  },
-  value: {
-    color: Colors.heroText,
-    marginBottom: Spacing.md,
-  },
-  columns: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  column: {
-    flex: 1,
-    gap: 2,
-  },
-  columnDivider: {
-    width: StyleSheet.hairlineWidth,
-    alignSelf: 'stretch',
-    backgroundColor: Colors.heroTrack,
-    marginHorizontal: Spacing.md,
-  },
-  columnLabel: {
-    color: Colors.heroMuted,
-  },
-  incomeValue: {
-    color: Colors.heroPositive,
-  },
-  expenseValue: {
-    color: Colors.heroNegative,
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    card: {
+      backgroundColor: colors.hero,
+      borderRadius: Radius.xl,
+      padding: Spacing.xl,
+      gap: Spacing.xs,
+    },
+    kicker: {
+      color: colors.heroMuted,
+    },
+    value: {
+      color: colors.heroText,
+      marginBottom: Spacing.md,
+    },
+    columns: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    column: {
+      flex: 1,
+      gap: 2,
+    },
+    columnDivider: {
+      width: StyleSheet.hairlineWidth,
+      alignSelf: 'stretch',
+      backgroundColor: colors.heroTrack,
+      marginHorizontal: Spacing.md,
+    },
+    columnLabel: {
+      color: colors.heroMuted,
+    },
+    incomeValue: {
+      color: colors.heroPositive,
+    },
+    expenseValue: {
+      color: colors.heroNegative,
+    },
+  });

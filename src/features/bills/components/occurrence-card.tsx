@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/app-text';
@@ -6,7 +7,9 @@ import { Button } from '@/components/button';
 import { formatIsoDateRelative, formatMoney } from '@/i18n/format';
 import { useTranslation } from '@/i18n';
 import { BILL_CATEGORY_ICONS } from '@/features/bills/meta';
-import { CardShadow, Colors, IconSize, Radius, Spacing } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
+import { CardShadow, IconSize, Radius, Spacing } from '@/theme/tokens';
+import type { ThemeColors } from '@/theme/tokens';
 import type { BillCategory, BillOccurrence } from '@/types/bill';
 
 export interface OccurrenceCardProps {
@@ -43,7 +46,9 @@ export function OccurrenceCard({
   actionLoading = false,
   testID,
 }: OccurrenceCardProps) {
+  const { colors } = useAppTheme();
   const { t, locale } = useTranslation();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const isDue = variant === 'due';
 
   const dateText = isDue
@@ -51,7 +56,7 @@ export function OccurrenceCard({
     : t('bills.history.paidOn', {
         date: formatIsoDateRelative(occurrence.paidOn ?? occurrence.dueOn, today, t),
       });
-  const dateColor = isDue ? dueDateTone(occurrence.dueOn, today) : Colors.textSecondary;
+  const dateColor = isDue ? dueDateTone(occurrence.dueOn, today, colors) : colors.textSecondary;
 
   const amountText = isDue
     ? t('bills.due.expected', { amount: formatMoney(occurrence.expectedAmountMinor, locale) })
@@ -62,7 +67,7 @@ export function OccurrenceCard({
   const body = (
     <>
       <View style={styles.iconCircle}>
-        <Ionicons name={BILL_CATEGORY_ICONS[category]} size={IconSize.md} color={Colors.primary} />
+        <Ionicons name={BILL_CATEGORY_ICONS[category]} size={IconSize.md} color={colors.primary} />
       </View>
       <View style={styles.body}>
         {billName ? (
@@ -87,7 +92,7 @@ export function OccurrenceCard({
         </View>
       </View>
       {onPress ? (
-        <Ionicons name="chevron-forward" size={IconSize.md} color={Colors.textMuted} />
+        <Ionicons name="chevron-forward" size={IconSize.md} color={colors.textMuted} />
       ) : null}
     </>
   );
@@ -122,57 +127,58 @@ export function OccurrenceCard({
   );
 }
 
-function dueDateTone(dueOn: string, today: string): string {
+function dueDateTone(dueOn: string, today: string, colors: ThemeColors): string {
   if (dueOn < today) {
-    return Colors.danger;
+    return colors.danger;
   }
   if (dueOn === today) {
-    return Colors.warning;
+    return colors.warning;
   }
-  return Colors.textSecondary;
+  return colors.textSecondary;
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.md,
-    gap: Spacing.sm,
-    ...CardShadow,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-  },
-  pressed: {
-    opacity: 0.7,
-  },
-  iconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.primarySoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  body: {
-    flex: 1,
-    gap: Spacing.xs,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: Spacing.md,
-  },
-  metaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  actionRow: {
-    paddingLeft: 40 + Spacing.md,
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    card: {
+      backgroundColor: colors.surface,
+      borderRadius: Radius.lg,
+      paddingVertical: Spacing.md,
+      paddingHorizontal: Spacing.md,
+      gap: Spacing.sm,
+      ...CardShadow,
+    },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.md,
+    },
+    pressed: {
+      opacity: 0.7,
+    },
+    iconCircle: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.primarySoft,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    body: {
+      flex: 1,
+      gap: Spacing.xs,
+    },
+    metaRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      gap: Spacing.md,
+    },
+    metaItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.xs,
+    },
+    actionRow: {
+      paddingLeft: 40 + Spacing.md,
+    },
+  });

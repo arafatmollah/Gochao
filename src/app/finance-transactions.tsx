@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, Stack } from 'expo-router';
 import { RefreshControl, SectionList, StyleSheet, View } from 'react-native';
+import { useMemo } from 'react';
 
 import { AppText } from '@/components/app-text';
 import { Button } from '@/components/button';
@@ -19,12 +20,16 @@ import {
 import { monthKeyLabel } from '@/features/finance/format';
 import { formatMoney } from '@/i18n/format';
 import { useTranslation } from '@/i18n';
-import { Colors, IconSize, Spacing } from '@/theme/tokens';
+import { IconSize, Spacing } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
+import type { ThemeColors } from '@/theme/tokens';
 import type { ActivityRow } from '@/types/finance';
 
 const KIND_FILTERS: ActivityKindFilter[] = ['all', 'income', 'expense', 'transfer'];
 
 export default function FinanceTransactionsScreen() {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { t } = useTranslation();
   const {
     kind,
@@ -83,7 +88,7 @@ export default function FinanceTransactionsScreen() {
               label={t('finance.transactions.addIncome')}
               variant="secondary"
               size="sm"
-              icon={<Ionicons name="arrow-down-circle-outline" size={IconSize.sm} color={Colors.success} />}
+              icon={<Ionicons name="arrow-down-circle-outline" size={IconSize.sm} color={colors.success} />}
               onPress={() =>
                 router.push({ pathname: '/transaction-form', params: { kind: 'income' } })
               }
@@ -93,7 +98,7 @@ export default function FinanceTransactionsScreen() {
               label={t('finance.transactions.addExpense')}
               variant="secondary"
               size="sm"
-              icon={<Ionicons name="arrow-up-circle-outline" size={IconSize.sm} color={Colors.danger} />}
+              icon={<Ionicons name="arrow-up-circle-outline" size={IconSize.sm} color={colors.danger} />}
               onPress={() =>
                 router.push({ pathname: '/transaction-form', params: { kind: 'expense' } })
               }
@@ -128,8 +133,8 @@ export default function FinanceTransactionsScreen() {
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={refresh}
-                tintColor={Colors.primary}
-                colors={[Colors.primary]}
+                tintColor={colors.primary}
+                colors={[colors.primary]}
               />
             }
             ListEmptyComponent={
@@ -164,6 +169,8 @@ export default function FinanceTransactionsScreen() {
 
 /** Month label plus that month's income/expense subtotals. */
 function MonthHeader({ section }: { section: ActivityMonthSection }) {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { t, locale } = useTranslation();
   return (
     <View style={styles.monthHeader}>
@@ -172,14 +179,14 @@ function MonthHeader({ section }: { section: ActivityMonthSection }) {
       </AppText>
       <View style={styles.monthTotals}>
         {section.incomeMinor > 0 ? (
-          <AppText variant="caption" style={{ color: Colors.success }}>
+          <AppText variant="caption" style={{ color: colors.success }}>
             {t('finance.transactions.incomeSummary', {
               amount: formatMoney(section.incomeMinor, locale),
             })}
           </AppText>
         ) : null}
         {section.expenseMinor > 0 ? (
-          <AppText variant="caption" style={{ color: Colors.danger }}>
+          <AppText variant="caption" style={{ color: colors.danger }}>
             {t('finance.transactions.expenseSummary', {
               amount: formatMoney(section.expenseMinor, locale),
             })}
@@ -191,10 +198,13 @@ function MonthHeader({ section }: { section: ActivityMonthSection }) {
 }
 
 function ListItemSeparator() {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return <View style={styles.separator} />;
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   toolbar: {
     paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.sm,
@@ -221,7 +231,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     paddingTop: Spacing.lg,
     paddingBottom: Spacing.sm,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   monthTotals: {
     flexDirection: 'row',

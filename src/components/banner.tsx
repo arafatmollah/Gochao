@@ -2,7 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { useTranslation } from '@/i18n';
-import { Colors, IconSize, Radius, Spacing } from '@/theme/tokens';
+import { IconSize, Radius, Spacing } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
 
 import { AppText } from './app-text';
 
@@ -15,19 +16,20 @@ export interface BannerProps {
 
 /** Inline notice for failed actions and other non-blocking problems. */
 export function Banner({ message, tone = 'danger', onDismiss, testID }: BannerProps) {
+  const { colors } = useAppTheme();
   const { t } = useTranslation();
   const isDanger = tone === 'danger';
   return (
     <View
       testID={testID}
       accessibilityRole="alert"
-      style={[styles.container, { backgroundColor: isDanger ? Colors.dangerSoft : Colors.primarySoft }]}>
+      style={[styles.container, { backgroundColor: isDanger ? colors.dangerSoft : colors.primarySoft }]}>
       <Ionicons
         name={isDanger ? 'alert-circle-outline' : 'information-circle-outline'}
         size={IconSize.md}
-        color={isDanger ? Colors.danger : Colors.primary}
+        color={isDanger ? colors.danger : colors.primary}
       />
-      <AppText variant="caption" style={[styles.message, { color: isDanger ? Colors.danger : Colors.primary }]}>
+      <AppText variant="caption" style={[styles.message, { color: isDanger ? colors.danger : colors.primary }]}>
         {message}
       </AppText>
       {onDismiss ? (
@@ -36,7 +38,7 @@ export function Banner({ message, tone = 'danger', onDismiss, testID }: BannerPr
           hitSlop={8}
           accessibilityRole="button"
           accessibilityLabel={t('common.dismiss')}>
-          <Ionicons name="close" size={IconSize.md} color={isDanger ? Colors.danger : Colors.primary} />
+          <Ionicons name="close" size={IconSize.md} color={isDanger ? colors.danger : colors.primary} />
         </Pressable>
       ) : null}
     </View>

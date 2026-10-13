@@ -16,9 +16,11 @@ import { useCategoryForm } from '@/features/finance/hooks/use-category-form';
 import { categoryDisplayName } from '@/features/finance/meta';
 import { useTranslation } from '@/i18n';
 import { translateValidationCode } from '@/i18n/errors';
-import { Colors, IconSize, Spacing } from '@/theme/tokens';
+import { IconSize, Spacing } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
 
 export default function CategoryFormScreen() {
+  const { colors } = useAppTheme();
   const { t } = useTranslation();
   const params = useLocalSearchParams<{ id?: string }>();
   const categoryId = typeof params.id === 'string' && params.id.length > 0 ? params.id : undefined;
@@ -105,7 +107,7 @@ export default function CategoryFormScreen() {
                       <AppText variant="bodyStrong">
                         {categoryDisplayName({ id: categoryId ?? '', name: form.name, isBuiltin: true }, t)}
                       </AppText>
-                      <Ionicons name="lock-closed-outline" size={IconSize.sm} color={Colors.textMuted} />
+                      <Ionicons name="lock-closed-outline" size={IconSize.sm} color={colors.textMuted} />
                     </View>
                   </Card>
                   <AppText variant="caption" color="textMuted">

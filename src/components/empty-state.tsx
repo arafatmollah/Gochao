@@ -1,7 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { Colors, IconSize, Spacing } from '@/theme/tokens';
+import { IconSize, Spacing } from '@/theme/tokens';
+import type { ThemeColors } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
 
 import { AppText } from './app-text';
 import { Button } from './button';
@@ -23,10 +26,12 @@ export function EmptyState({
   onAction,
   testID,
 }: EmptyStateProps) {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.container} testID={testID}>
       <View style={styles.iconCircle}>
-        <Ionicons name={icon} size={IconSize.xl} color={Colors.textMuted} />
+        <Ionicons name={icon} size={IconSize.xl} color={colors.textMuted} />
       </View>
       <AppText variant="subheading" align="center">
         {title}
@@ -41,25 +46,26 @@ export function EmptyState({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: Spacing.xxxl,
-    paddingHorizontal: Spacing.xl,
-    gap: Spacing.sm,
-  },
-  iconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: Colors.surfaceMuted,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.sm,
-  },
-  message: {
-    marginBottom: Spacing.md,
-    maxWidth: 320,
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: Spacing.xxxl,
+      paddingHorizontal: Spacing.xl,
+      gap: Spacing.sm,
+    },
+    iconCircle: {
+      width: 64,
+      height: 64,
+      borderRadius: 32,
+      backgroundColor: colors.surfaceMuted,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: Spacing.sm,
+    },
+    message: {
+      marginBottom: Spacing.md,
+      maxWidth: 320,
+    },
+  });

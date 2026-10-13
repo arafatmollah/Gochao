@@ -40,6 +40,9 @@ describe('AboutScreen', () => {
     await fireEvent.press(screen.getByTestId('about-version-entry'));
     expect(mockPush).toHaveBeenCalledWith('/about-version-history');
 
+    await fireEvent.press(screen.getByTestId('about-update-entry'));
+    expect(mockPush).toHaveBeenCalledWith('/about-update');
+
     await fireEvent.press(screen.getByTestId('about-terms-entry'));
     expect(mockPush).toHaveBeenCalledWith('/about-terms');
 

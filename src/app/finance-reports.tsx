@@ -1,5 +1,6 @@
 import { router, Stack } from 'expo-router';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { useMemo } from 'react';
 
 import { AppText } from '@/components/app-text';
 import { Card } from '@/components/card';
@@ -15,10 +16,14 @@ import { REPORT_RANGES, useFinanceReports } from '@/features/finance/hooks/use-f
 import { categoryDisplayName } from '@/features/finance/meta';
 import { useTranslation } from '@/i18n';
 import { formatMoney } from '@/i18n/format';
-import { Colors, Radius, Spacing } from '@/theme/tokens';
+import { Radius, Spacing } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
+import type { ThemeColors } from '@/theme/tokens';
 import type { CategoryTotal } from '@/types/finance';
 
 export default function FinanceReportsScreen() {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { t, locale } = useTranslation();
   const reports = useFinanceReports();
 
@@ -57,8 +62,8 @@ export default function FinanceReportsScreen() {
             <RefreshControl
               refreshing={reports.refreshing}
               onRefresh={reports.refresh}
-              tintColor={Colors.primary}
-              colors={[Colors.primary]}
+              tintColor={colors.primary}
+              colors={[colors.primary]}
             />
           }>
           {!reports.hasData ? (
@@ -139,7 +144,7 @@ export default function FinanceReportsScreen() {
                           style={[
                             styles.fill,
                             {
-                              backgroundColor: Colors.primary,
+                              backgroundColor: colors.primary,
                               width: `${Math.round((item.totalMinor / largestMax) * 100)}%`,
                             },
                           ]}
@@ -238,6 +243,8 @@ function CategoryLine({
   totalMinor: number;
   first: boolean;
 }) {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { t, locale } = useTranslation();
   const share = totalMinor > 0 ? Math.round((item.totalMinor / totalMinor) * 100) : 0;
 
@@ -259,7 +266,8 @@ function CategoryLine({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   content: {
     padding: Spacing.lg,
     gap: Spacing.lg,
@@ -292,7 +300,7 @@ const styles = StyleSheet.create({
   },
   categoryLineBordered: {
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: Colors.border,
+    borderTopColor: colors.border,
     paddingTop: Spacing.sm,
     marginTop: Spacing.sm,
   },
@@ -302,7 +310,7 @@ const styles = StyleSheet.create({
   track: {
     height: 8,
     borderRadius: Radius.pill,
-    backgroundColor: Colors.surfaceMuted,
+    backgroundColor: colors.surfaceMuted,
     overflow: 'hidden',
   },
   fill: {

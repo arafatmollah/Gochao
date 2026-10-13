@@ -56,11 +56,23 @@ export const Colors = {
 
 export type ColorName = keyof typeof Colors;
 
-export const PriorityColors = {
-  high: { fg: Colors.danger, bg: Colors.dangerSoft },
-  medium: { fg: Colors.warning, bg: Colors.warningSoft },
-  low: { fg: Colors.textSecondary, bg: Colors.surfaceMuted },
-} as const;
+/**
+ * A full palette: every theme supplies all `ColorName` keys as plain color
+ * strings. Deliberately widened (not the `as const` literals) so alternate
+ * palettes satisfy it while `Colors` itself remains assignable.
+ */
+export type ThemeColors = Record<ColorName, string>;
+
+export function priorityColors(colors: ThemeColors): Record<
+  'high' | 'medium' | 'low',
+  { fg: string; bg: string }
+> {
+  return {
+    high: { fg: colors.danger, bg: colors.dangerSoft },
+    medium: { fg: colors.warning, bg: colors.warningSoft },
+    low: { fg: colors.textSecondary, bg: colors.surfaceMuted },
+  };
+}
 
 export const Spacing = {
   xs: 4,

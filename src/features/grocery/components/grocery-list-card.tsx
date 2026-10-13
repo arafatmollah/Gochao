@@ -1,11 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/app-text';
 import { useTranslation } from '@/i18n';
 import { formatMoney } from '@/i18n/format';
 import type { Locale, TranslateFn } from '@/i18n/translate';
-import { CardShadow, Colors, IconSize, Radius, Spacing } from '@/theme/tokens';
+import { CardShadow, IconSize, Radius, Spacing } from '@/theme/tokens';
+import type { ThemeColors } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
 import type { GroceryListSummary } from '@/types/grocery';
 
 export interface GroceryListCardProps {
@@ -15,7 +18,9 @@ export interface GroceryListCardProps {
 }
 
 export function GroceryListCard({ list, onPress, testID }: GroceryListCardProps) {
+  const { colors } = useAppTheme();
   const { t, locale } = useTranslation();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const done = list.totalItems > 0 && list.remainingItems === 0;
 
   const statusLine =
@@ -36,7 +41,7 @@ export function GroceryListCard({ list, onPress, testID }: GroceryListCardProps)
         <Ionicons
           name={list.isArchived ? 'archive-outline' : 'cart-outline'}
           size={IconSize.md}
-          color={Colors.primary}
+          color={colors.primary}
         />
       </View>
       <View style={styles.body}>
@@ -55,7 +60,7 @@ export function GroceryListCard({ list, onPress, testID }: GroceryListCardProps)
           </AppText>
         ) : null}
       </View>
-      <Ionicons name="chevron-forward" size={IconSize.md} color={Colors.textMuted} />
+      <Ionicons name="chevron-forward" size={IconSize.md} color={colors.textMuted} />
     </Pressable>
   );
 }
@@ -73,29 +78,30 @@ function totalsLine(list: GroceryListSummary, t: TranslateFn, locale: Locale): s
   return parts.join(' · ');
 }
 
-const styles = StyleSheet.create({
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
-    padding: Spacing.lg,
-    ...CardShadow,
-  },
-  cardPressed: {
-    backgroundColor: Colors.surfaceMuted,
-  },
-  icon: {
-    width: 40,
-    height: 40,
-    borderRadius: Radius.md,
-    backgroundColor: Colors.primarySoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  body: {
-    flex: 1,
-    gap: 2,
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    card: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.md,
+      backgroundColor: colors.surface,
+      borderRadius: Radius.lg,
+      padding: Spacing.lg,
+      ...CardShadow,
+    },
+    cardPressed: {
+      backgroundColor: colors.surfaceMuted,
+    },
+    icon: {
+      width: 40,
+      height: 40,
+      borderRadius: Radius.md,
+      backgroundColor: colors.primarySoft,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    body: {
+      flex: 1,
+      gap: 2,
+    },
+  });

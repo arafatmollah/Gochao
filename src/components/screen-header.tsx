@@ -1,9 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { ReactNode } from 'react';
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { useTranslation } from '@/i18n';
-import { Colors, IconSize, Spacing } from '@/theme/tokens';
+import { IconSize, Spacing } from '@/theme/tokens';
+import type { ThemeColors } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
 
 import { AppText } from './app-text';
 
@@ -25,6 +28,8 @@ export interface ScreenHeaderProps {
  * over a large title, with room for trailing actions.
  */
 export function ScreenHeader({ kicker, kickerTone = 'default', title, right, onBack, testID }: ScreenHeaderProps) {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { t } = useTranslation();
   return (
     <View style={styles.container} testID={testID}>
@@ -37,7 +42,7 @@ export function ScreenHeader({ kicker, kickerTone = 'default', title, right, onB
             accessibilityLabel={t('common.back')}
             testID={testID ? `${testID}-back` : 'screen-header-back'}
             style={styles.backButton}>
-            <Ionicons name="chevron-back" size={IconSize.md} color={Colors.text} />
+            <Ionicons name="chevron-back" size={IconSize.md} color={colors.text} />
           </Pressable>
         ) : null}
         <View style={styles.kickerColumn}>
@@ -59,34 +64,35 @@ export function ScreenHeader({ kicker, kickerTone = 'default', title, right, onB
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.sm,
-    backgroundColor: Colors.background,
-  },
-  kickerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.md,
-  },
-  backButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: -Spacing.sm,
-  },
-  kickerColumn: {
-    flex: 1,
-    gap: 2,
-  },
-  right: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      paddingHorizontal: Spacing.lg,
+      paddingTop: Spacing.md,
+      paddingBottom: Spacing.sm,
+      backgroundColor: colors.background,
+    },
+    kickerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: Spacing.md,
+    },
+    backButton: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginLeft: -Spacing.sm,
+    },
+    kickerColumn: {
+      flex: 1,
+      gap: 2,
+    },
+    right: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm,
+    },
+  });

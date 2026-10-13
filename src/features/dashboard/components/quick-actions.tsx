@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/app-text';
 import { useTranslation } from '@/i18n';
-import { Colors, IconSize, Spacing } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
+import { IconSize, Spacing } from '@/theme/tokens';
 
 export interface QuickActionsProps {
   onAddTask: () => void;
@@ -16,7 +17,9 @@ export interface QuickActionsProps {
 
 /**
  * Round quick actions under the hero card. Only actions backed by real
- * functionality are shown; they must never be dead buttons.
+ * functionality are shown; they must never be dead buttons. The row scrolls
+ * horizontally on narrow screens (five `minWidth` actions overflow ~320px
+ * layouts) while spreading full-width where it fits.
  */
 export function QuickActions({
   onAddTask,
@@ -26,50 +29,55 @@ export function QuickActions({
   onAddFamilyRequest,
   testID,
 }: QuickActionsProps) {
+  const { colors } = useAppTheme();
   const { t } = useTranslation();
   return (
-    <View style={styles.row} testID={testID}>
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.row}
+      testID={testID}>
       <QuickAction
         icon="add"
         label={t('dashboard.addTask')}
-        color={Colors.primary}
-        backgroundColor={Colors.primarySoft}
+        color={colors.primary}
+        backgroundColor={colors.primarySoft}
         onPress={onAddTask}
         testID="quick-add-task"
       />
       <QuickAction
         icon="arrow-down-circle-outline"
         label={t('finance.overview.addIncome')}
-        color={Colors.success}
-        backgroundColor={Colors.successSoft}
+        color={colors.success}
+        backgroundColor={colors.successSoft}
         onPress={onAddIncome}
         testID="quick-add-income"
       />
       <QuickAction
         icon="arrow-up-circle-outline"
         label={t('finance.overview.addExpense')}
-        color={Colors.danger}
-        backgroundColor={Colors.dangerSoft}
+        color={colors.danger}
+        backgroundColor={colors.dangerSoft}
         onPress={onAddExpense}
         testID="quick-add-expense"
       />
       <QuickAction
         icon="receipt-outline"
         label={t('nav.bills')}
-        color={Colors.accentPurple}
-        backgroundColor={Colors.accentPurpleSoft}
+        color={colors.accentPurple}
+        backgroundColor={colors.accentPurpleSoft}
         onPress={onViewBills}
         testID="quick-view-bills"
       />
       <QuickAction
         icon="people-outline"
         label={t('dashboard.quickFamily')}
-        color={Colors.accentGold}
-        backgroundColor={Colors.accentGoldSoft}
+        color={colors.accentGold}
+        backgroundColor={colors.accentGoldSoft}
         onPress={onAddFamilyRequest}
         testID="quick-add-family-request"
       />
-    </View>
+    </ScrollView>
   );
 }
 
@@ -107,6 +115,7 @@ function QuickAction({
 
 const styles = StyleSheet.create({
   row: {
+    flexGrow: 1,
     flexDirection: 'row',
     gap: Spacing.md,
     paddingVertical: Spacing.lg,

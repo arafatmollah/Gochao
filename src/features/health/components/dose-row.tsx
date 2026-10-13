@@ -1,10 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/app-text';
 import { useTranslation } from '@/i18n';
 import { formatWallClock12 } from '@/i18n/format';
-import { CardShadow, Colors, IconSize, Radius, Spacing } from '@/theme/tokens';
+import { CardShadow, IconSize, Radius, Spacing } from '@/theme/tokens';
+import type { ThemeColors } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
 import type { DueDose } from '@/types/health';
 
 export interface DoseRowProps {
@@ -16,7 +19,9 @@ export interface DoseRowProps {
 }
 
 export function DoseRow({ dose, onLogTaken, onLogSkipped, onClear, testID }: DoseRowProps) {
+  const { colors } = useAppTheme();
   const { t, locale } = useTranslation();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   return (
     <View style={styles.card}>
@@ -38,7 +43,7 @@ export function DoseRow({ dose, onLogTaken, onLogSkipped, onClear, testID }: Dos
         {dose.status ? (
           <AppText
             variant="caption"
-            style={{ color: dose.status === 'taken' ? Colors.success : Colors.warning }}>
+            style={{ color: dose.status === 'taken' ? colors.success : colors.warning }}>
             {t(`health.dose.${dose.status}`)}
           </AppText>
         ) : null}
@@ -48,8 +53,8 @@ export function DoseRow({ dose, onLogTaken, onLogSkipped, onClear, testID }: Dos
         <>
           <DoseButton
             icon="checkmark-outline"
-            color={Colors.success}
-            backgroundColor={Colors.successSoft}
+            color={colors.success}
+            backgroundColor={colors.successSoft}
             accessibilityLabel={t('health.dose.markTaken', {
               name: dose.medicineName,
               time: formatWallClock12(dose.time, locale),
@@ -59,8 +64,8 @@ export function DoseRow({ dose, onLogTaken, onLogSkipped, onClear, testID }: Dos
           />
           <DoseButton
             icon="close-outline"
-            color={Colors.warning}
-            backgroundColor={Colors.warningSoft}
+            color={colors.warning}
+            backgroundColor={colors.warningSoft}
             accessibilityLabel={t('health.dose.markSkipped', {
               name: dose.medicineName,
               time: formatWallClock12(dose.time, locale),
@@ -72,8 +77,8 @@ export function DoseRow({ dose, onLogTaken, onLogSkipped, onClear, testID }: Dos
       ) : (
         <DoseButton
           icon="refresh-outline"
-          color={Colors.textSecondary}
-          backgroundColor={Colors.surfaceMuted}
+          color={colors.textSecondary}
+          backgroundColor={colors.surfaceMuted}
           accessibilityLabel={t('health.dose.clearDose', {
             name: dose.medicineName,
             time: formatWallClock12(dose.time, locale),
@@ -101,6 +106,8 @@ function DoseButton({
   onPress: () => void;
   testID?: string;
 }) {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <Pressable
       onPress={onPress}
@@ -114,34 +121,35 @@ function DoseButton({
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
-    padding: Spacing.md,
-    ...CardShadow,
-  },
-  timeBadge: {
-    borderRadius: Radius.md,
-    backgroundColor: Colors.primarySoft,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-  },
-  timeText: {
-    color: Colors.primary,
-  },
-  body: {
-    flex: 1,
-    gap: 2,
-  },
-  action: {
-    width: 44,
-    height: 44,
-    borderRadius: Radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    card: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm,
+      backgroundColor: colors.surface,
+      borderRadius: Radius.lg,
+      padding: Spacing.md,
+      ...CardShadow,
+    },
+    timeBadge: {
+      borderRadius: Radius.md,
+      backgroundColor: colors.primarySoft,
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: Spacing.xs,
+    },
+    timeText: {
+      color: colors.primary,
+    },
+    body: {
+      flex: 1,
+      gap: 2,
+    },
+    action: {
+      width: 44,
+      height: 44,
+      borderRadius: Radius.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+  });

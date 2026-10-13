@@ -1,10 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/app-text';
 import { formatIsoDateDisplay, formatWallClock12 } from '@/i18n/format';
 import { useTranslation } from '@/i18n';
-import { CardShadow, Colors, IconSize, Radius, Spacing } from '@/theme/tokens';
+import { CardShadow, IconSize, Radius, Spacing } from '@/theme/tokens';
+import type { ThemeColors } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/theme-context';
 import type { Appointment, HealthRecord } from '@/types/health';
 
 export interface AppointmentRowProps {
@@ -14,7 +17,9 @@ export interface AppointmentRowProps {
 }
 
 export function AppointmentRow({ appointment, onPress, testID }: AppointmentRowProps) {
+  const { colors } = useAppTheme();
   const { t, locale } = useTranslation();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   const when = appointment.time
     ? `${formatIsoDateDisplay(appointment.date, t)}, ${formatWallClock12(appointment.time, locale)}`
@@ -31,7 +36,7 @@ export function AppointmentRow({ appointment, onPress, testID }: AppointmentRowP
       testID={testID}
       style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}>
       <View style={styles.icon}>
-        <Ionicons name="calendar-outline" size={IconSize.md} color={Colors.primary} />
+        <Ionicons name="calendar-outline" size={IconSize.md} color={colors.primary} />
       </View>
       <View style={styles.body}>
         <AppText variant="bodyStrong" numberOfLines={1}>
@@ -46,7 +51,7 @@ export function AppointmentRow({ appointment, onPress, testID }: AppointmentRowP
           </AppText>
         ) : null}
       </View>
-      <Ionicons name="chevron-forward" size={IconSize.md} color={Colors.textMuted} />
+      <Ionicons name="chevron-forward" size={IconSize.md} color={colors.textMuted} />
     </Pressable>
   );
 }
@@ -58,7 +63,9 @@ export interface HealthNoteCardProps {
 }
 
 export function HealthNoteCard({ record, onPress, testID }: HealthNoteCardProps) {
+  const { colors } = useAppTheme();
   const { t } = useTranslation();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   return (
     <Pressable
@@ -84,29 +91,30 @@ export function HealthNoteCard({ record, onPress, testID }: HealthNoteCardProps)
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
-    padding: Spacing.lg,
-    ...CardShadow,
-  },
-  cardPressed: {
-    backgroundColor: Colors.surfaceMuted,
-  },
-  icon: {
-    width: 40,
-    height: 40,
-    borderRadius: Radius.md,
-    backgroundColor: Colors.primarySoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  body: {
-    flex: 1,
-    gap: 2,
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    card: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.md,
+      backgroundColor: colors.surface,
+      borderRadius: Radius.lg,
+      padding: Spacing.lg,
+      ...CardShadow,
+    },
+    cardPressed: {
+      backgroundColor: colors.surfaceMuted,
+    },
+    icon: {
+      width: 40,
+      height: 40,
+      borderRadius: Radius.md,
+      backgroundColor: colors.primarySoft,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    body: {
+      flex: 1,
+      gap: 2,
+    },
+  });

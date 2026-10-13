@@ -15,7 +15,7 @@ import { PRAYERS } from '@/types/prayer';
  * else, including unsupported platforms such as web).
  */
 
-export const PRAYER_REMINDER_CHANNEL_ID = 'prayer-times';
+export const PRAYER_REMINDER_CHANNEL_ID = 'prayer-times-v2';
 export const PRAYER_REMINDER_CHANNEL_NAME = 'Prayer times';
 
 export function reminderIdentifier(prayer: PrayerName): string {
@@ -46,7 +46,7 @@ export interface ReminderScheduler {
 export type ReminderFailure = 'denied' | 'unavailable';
 export type EnableRemindersResult = { ok: true } | { ok: false; reason: ReminderFailure };
 
-function defaultScheduler(): ReminderScheduler {
+export function defaultScheduler(): ReminderScheduler {
   // Lazy so the web bundle (no native module) never evaluates the import
   // unless a native code path actually schedules.
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -60,8 +60,10 @@ function defaultScheduler(): ReminderScheduler {
     setNotificationChannelAsync: (id, channel) =>
       Notifications.setNotificationChannelAsync(id, {
         name: channel.name,
-        // AndroidImportance.HIGH
-        importance: 4,
+        // AndroidImportance.HIGH is 6 in expo-notifications
+        importance: channel.importance ?? (Notifications.AndroidImportance?.HIGH ?? 6),
+        sound: 'default',
+        enableVibrate: true,
       }),
     setNotificationHandler: (handler) => Notifications.setNotificationHandler(handler),
     scheduleNotificationAsync: (request) =>
@@ -100,7 +102,7 @@ export async function scheduleDailyPrayerReminders(
   try {
     await scheduler.setNotificationChannelAsync(PRAYER_REMINDER_CHANNEL_ID, {
       name: PRAYER_REMINDER_CHANNEL_NAME,
-      importance: 4,
+      importance: 6,
     });
   } catch {
     // Non-Android platforms have no channels; continue regardless.
@@ -110,7 +112,7 @@ export async function scheduleDailyPrayerReminders(
       handleNotification: async () => ({
         shouldShowBanner: true,
         shouldShowList: true,
-        shouldPlaySound: false,
+        shouldPlaySound: true,
         shouldSetBadge: false,
       }),
     });
