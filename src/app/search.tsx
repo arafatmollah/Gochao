@@ -210,6 +210,12 @@ function openTarget(id: string) {
     case 'go-about':
       router.push('/about');
       break;
+    case 'go-feedback':
+      router.push('/feedback');
+      break;
+    case 'go-backup':
+      router.push('/backup');
+      break;
     case 'go-prayer-settings':
       router.push('/prayer-settings');
       break;

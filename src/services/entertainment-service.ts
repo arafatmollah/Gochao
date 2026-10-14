@@ -43,7 +43,11 @@ export interface EntertainmentService {
    * case-insensitively per kind) — then returns the existing row instead of
    * duplicating it. Reports whether a new row was created.
    */
-  saveSpotlight(title: string, kind: WatchKind): Promise<{ item: WatchItem; created: boolean }>;
+  saveSpotlight(
+    title: string,
+    kind: WatchKind,
+    extra?: { source?: WatchItem['source']; notes?: string },
+  ): Promise<{ item: WatchItem; created: boolean }>;
 }
 
 /** Wraps unexpected storage failures; never leaks SQL or record contents. */
@@ -159,6 +163,7 @@ export function createEntertainmentService(
         url: normalizeUrl(input.url),
         rating: input.rating ?? null,
         notes: normalizeNotes(input.notes),
+        source: input.source ?? 'user',
         createdAt: timestamp,
         updatedAt: timestamp,
       };
@@ -252,6 +257,7 @@ export function createEntertainmentService(
     async saveSpotlight(
       title: string,
       kind: WatchKind,
+      extra?: { source?: WatchItem['source']; notes?: string },
     ): Promise<{ item: WatchItem; created: boolean }> {
       const kindError = validateWatchKind(kind);
       if (kindError) {
@@ -269,7 +275,7 @@ export function createEntertainmentService(
       } catch (error) {
         throw databaseError(error);
       }
-      const item = await this.create({ title, kind });
+      const item = await this.create({ title, kind, ...extra });
       return { item, created: true };
     },
   };

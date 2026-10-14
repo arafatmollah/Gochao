@@ -8,7 +8,7 @@ import type {
   PrayerStatus,
   UpdatePrayerSettingsInput,
 } from '@/types/prayer';
-import { PRAYERS } from '@/types/prayer';
+import { ADJUSTABLE_PRAYERS, PRAYERS } from '@/types/prayer';
 import { addDaysIsoDate } from '@/utils/dates';
 import { AppError } from '@/utils/errors';
 import { nowIso } from '@/utils/time';
@@ -185,7 +185,7 @@ export function createPrayerService(
 
       const adjustments = { ...current.adjustments };
       if (input.adjustments) {
-        for (const prayer of PRAYERS) {
+        for (const prayer of ADJUSTABLE_PRAYERS) {
           const value = input.adjustments[prayer];
           if (value === undefined) {
             continue;

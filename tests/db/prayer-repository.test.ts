@@ -143,4 +143,22 @@ describe('PrayerRepository logs', () => {
     expect(await repo.listLogs('2026-10-12', '2026-10-12')).toHaveLength(0);
     expect(await repo.deleteLog('2026-10-12', 'fajr')).toBe(false);
   });
+
+  it('stores tahajjud times and logs first in prayer order', async () => {
+    await repo.replaceDayTimes(
+      '2026-10-12',
+      [
+        ...TIMES,
+        { prayer: 'tahajjud', time: '00:00' },
+      ],
+      FINGERPRINT,
+      T0,
+    );
+    await repo.upsertLog({ date: '2026-10-12', prayer: 'tahajjud', status: 'prayed', loggedAt: T0, updatedAt: T0 });
+
+    const loaded = await repo.listDayTimes('2026-10-12');
+    expect(loaded.map((row) => row.prayer)[0]).toBe('tahajjud');
+    const logs = await repo.listLogs('2026-10-12', '2026-10-12');
+    expect(logs.map((log) => log.prayer)[0]).toBe('tahajjud');
+  });
 });

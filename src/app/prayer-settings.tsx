@@ -25,12 +25,12 @@ import { useTranslation } from '@/i18n';
 import { IconSize, Spacing } from '@/theme/tokens';
 import { useAppTheme } from '@/theme/theme-context';
 import {
-  PRAYERS,
+  ADJUSTABLE_PRAYERS,
   PRAYER_CALCULATION_METHODS,
   PRAYER_MADHABS,
+  type AdjustablePrayer,
   type PrayerCalculationMethod,
   type PrayerMadhab,
-  type PrayerName,
 } from '@/types/prayer';
 
 export default function PrayerSettingsScreen() {
@@ -198,7 +198,7 @@ export default function PrayerSettingsScreen() {
                 {form.adjustError ? (
                   <Banner message={translateValidationCode(form.adjustError, t)} />
                 ) : null}
-                {PRAYERS.map((prayer: PrayerName) => (
+                {ADJUSTABLE_PRAYERS.map((prayer: AdjustablePrayer) => (
                   <TextField
                     key={prayer}
                     label={t(`prayer.names.${prayer}`)}

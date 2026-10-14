@@ -21,6 +21,7 @@ export const THEME_IDS = [
   'loki',
   'ironman',
   'strange',
+  'onepiece',
 ] as const;
 
 export type ThemeId = (typeof THEME_IDS)[number];
@@ -40,6 +41,7 @@ export const THEME_STATUS_BAR: Record<ThemeId, 'dark' | 'light'> = {
   loki: 'light',
   ironman: 'light',
   strange: 'light',
+  onepiece: 'dark',
 };
 
 const dark: ThemeColors = {
@@ -247,8 +249,7 @@ const ironman: ThemeColors = {
   overlay: 'rgba(0, 0, 0, 0.6)',
 };
 
-const strange: ThemeColors = {
-  background: '#120E1C',
+const strange: ThemeColors = {  background: '#120E1C',
   surface: '#1D162E',
   surfaceMuted: '#261D3A',
   border: '#2C2344',
@@ -288,6 +289,47 @@ const strange: ThemeColors = {
   overlay: 'rgba(0, 0, 0, 0.6)',
 };
 
+const onepiece: ThemeColors = {
+  background: '#F4EFE3',
+  surface: '#FFFFFF',
+  surfaceMuted: '#ECE4D0',
+  border: '#E4DCCB',
+  borderStrong: '#D5C9AC',
+
+  text: '#23272E',
+  textSecondary: '#5E6B76',
+  textMuted: '#939AA2',
+
+  primary: '#D62828',
+  primaryPressed: '#A81F1F',
+  primarySoft: '#F9E2E2',
+  onPrimary: '#FFFFFF',
+
+  hero: '#1D3557',
+  heroText: '#FFFFFF',
+  heroMuted: 'rgba(255, 255, 255, 0.72)',
+  heroTrack: 'rgba(255, 255, 255, 0.18)',
+  heroPositive: '#8FE3B9',
+  heroNegative: '#FFB08E',
+
+  danger: '#BC3B26',
+  dangerSoft: '#F8E7E1',
+  warning: '#A86A15',
+  warningSoft: '#F6EDD8',
+
+  success: '#1C7A52',
+  successSoft: '#DFF1E7',
+
+  accentGold: '#B8860B',
+  accentGoldSoft: '#F7ECD0',
+  accentPurple: '#6E44B5',
+  accentPurpleSoft: '#EEE6F9',
+
+  accentCoral: '#E5484D',
+
+  overlay: 'rgba(35, 39, 46, 0.45)',
+};
+
 export const THEMES: Record<ThemeId, ThemeColors> = {
   default: Colors,
   dark,
@@ -296,4 +338,5 @@ export const THEMES: Record<ThemeId, ThemeColors> = {
   loki,
   ironman,
   strange,
+  onepiece,
 };

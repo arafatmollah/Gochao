@@ -59,5 +59,7 @@ describe('universal search index', () => {
     expect(
       filterSearchIndex(index, 'APP UPDATE').map((target) => target.id),
     ).toContain('check-updates');
+    expect(filterSearchIndex(index, 'backup').map((target) => target.id)).toContain('go-backup');
+    expect(filterSearchIndex(index, 'bug').map((target) => target.id)).toContain('go-feedback');
   });
 });

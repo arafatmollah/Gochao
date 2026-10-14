@@ -10,6 +10,9 @@ import { migration009 } from './009-health';
 import { migration010 } from './010-entertainment';
 import { migration011 } from './011-prayer-reminders';
 import { migration012 } from './012-prayer-utc-offset';
+import { migration013 } from './013-watchlist-source';
+import { migration014 } from './014-entertainment-intelligence';
+import { migration015 } from './015-prayer-tahajjud';
 import type { Migration } from './types';
 
 /**
@@ -27,9 +30,12 @@ import type { Migration } from './types';
  * 010 entertainment watchlist
  * 011 prayer reminder preference flag
  * 012 prayer location UTC offset
+ * 013 watchlist recommendation source
+ * 014 entertainment intelligence (offline cache + notification audit log)
+ * 015 tahajjud prayer (widens prayer CHECKs)
  *
  * Remaining planned migrations (added when their phases are implemented):
- *   013 attachments and generic reminder metadata
+ *   016 attachments and generic reminder metadata
  */
 export const MIGRATIONS: readonly Migration[] = [
   migration001,
@@ -44,6 +50,9 @@ export const MIGRATIONS: readonly Migration[] = [
   migration010,
   migration011,
   migration012,
+  migration013,
+  migration014,
+  migration015,
 ];
 
 export type { Migration } from './types';

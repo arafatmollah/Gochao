@@ -6,8 +6,16 @@
  * `YYYY-MM-DD` days.
  */
 
-export const PRAYERS = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const;
+export const PRAYERS = ['tahajjud', 'fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const;
 export type PrayerName = (typeof PRAYERS)[number];
+
+/**
+ * Prayers with astronomically calculated times. Tahajjud is excluded: its
+ * window is fixed by definition (midnight until Fajr), so it needs no
+ * method, madhab, coordinates, or manual adjustment.
+ */
+export const ADJUSTABLE_PRAYERS = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const;
+export type AdjustablePrayer = (typeof ADJUSTABLE_PRAYERS)[number];
 
 /**
  * Prayers offered in daylight, shown with the sun theme. Fajr, Maghrib, and
@@ -61,8 +69,8 @@ export interface PrayerSettings {
   cityLabel: string;
   /** Location offset from UTC in whole minutes; display = instant + offset. */
   utcOffsetMinutes: number;
-  /** Whole-minute manual offsets per prayer (negative = earlier). */
-  adjustments: Record<PrayerName, number>;
+  /** Whole-minute manual offsets per calculated prayer (negative = earlier). */
+  adjustments: Record<AdjustablePrayer, number>;
   /** Whether a notification is scheduled at each prayer time. */
   remindersEnabled: boolean;
   /** ISO-8601 UTC timestamp of the last save. */
@@ -76,7 +84,7 @@ export interface UpdatePrayerSettingsInput {
   longitude?: number;
   cityLabel?: string;
   utcOffsetMinutes?: number;
-  adjustments?: Partial<Record<PrayerName, number>>;
+  adjustments?: Partial<Record<AdjustablePrayer, number>>;
   remindersEnabled?: boolean;
 }
 

@@ -50,6 +50,13 @@ export function WatchlistRow({ item, onPress, onOpenLink, testID }: WatchlistRow
               color={statusColor(item.status, colors).fg}
               backgroundColor={statusColor(item.status, colors).bg}
             />
+            {item.source === 'tmdb' ? (
+              <Badge
+                label={t('entertainment.recommendedBadge')}
+                color={colors.accentPurple}
+                backgroundColor={colors.accentPurpleSoft}
+              />
+            ) : null}
             {item.rating !== null ? (
               <RatingStars rating={item.rating} />
             ) : (

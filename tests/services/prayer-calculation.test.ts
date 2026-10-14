@@ -1,4 +1,4 @@
-import { calculateDayTimes, findCurrentPrayer, findNextPrayer, minutesUntil, prayerWindowEnd } from '@/services/prayer-calculation';
+import { addMinutesToWallClock, calculateDayTimes, calculateRestrictedWindows, calculateSunrise, findCurrentPrayer, findNextPrayer, minutesUntil, prayerWindowEnd } from '@/services/prayer-calculation';
 import { defaultPrayerSettings } from '@/db/repositories/prayer-repository';
 import { isDayPrayer } from '@/types/prayer';
 
@@ -13,6 +13,7 @@ describe('prayer calculation (adhan, offline)', () => {
     // These instants are fixed astronomy; rendering through the +360 offset
     // must yield Dhaka wall times on any device (CI runs in UTC).
     expect(calculateDayTimes('2026-10-12', DHAKA).map((entry) => entry.time)).toEqual([
+      '00:00',
       '04:39',
       '11:46',
       '15:57',
@@ -21,9 +22,18 @@ describe('prayer calculation (adhan, offline)', () => {
     ]);
   });
 
+  it('opens Tahajjud at local midnight for every location', () => {
+    const day = calculateDayTimes('2026-10-12', DHAKA);
+    expect(day[0]).toEqual({ prayer: 'tahajjud', time: '00:00' });
+    // Midnight needs no offset math: it is 00:00 in any timezone.
+    const utc = calculateDayTimes('2026-10-12', { ...DHAKA, utcOffsetMinutes: 0 });
+    expect(utc[0]).toEqual({ prayer: 'tahajjud', time: '00:00' });
+  });
+
   it('shifts wall times with the UTC offset setting', () => {
     const utc = calculateDayTimes('2026-10-12', { ...DHAKA, utcOffsetMinutes: 0 });
     expect(utc.map((entry) => entry.time)).toEqual([
+      '00:00',
       '22:39',
       '05:46',
       '09:57',
@@ -32,10 +42,11 @@ describe('prayer calculation (adhan, offline)', () => {
     ]);
   });
 
-  it('calculates five ordered wall-clock times for Dhaka', () => {
+  it('calculates six ordered wall-clock times for Dhaka', () => {
     const times = calculateDayTimes('2026-10-12', DHAKA);
 
     expect(times.map((entry) => entry.prayer)).toEqual([
+      'tahajjud',
       'fajr',
       'dhuhr',
       'asr',
@@ -71,16 +82,20 @@ describe('prayer calculation (adhan, offline)', () => {
       const [hours, mins] = time.split(':').map(Number);
       return hours * 60 + mins;
     };
-    expect(toMinutes(adjusted[0].time) - toMinutes(base[0].time)).toBe(10);
-    expect(toMinutes(adjusted[4].time) - toMinutes(base[4].time)).toBe(-5);
+    const at = (times: { prayer: string; time: string }[], prayer: string) =>
+      times.find((entry) => entry.prayer === prayer)?.time ?? '';
+    expect(toMinutes(at(adjusted, 'fajr')) - toMinutes(at(base, 'fajr'))).toBe(10);
+    expect(toMinutes(at(adjusted, 'isha')) - toMinutes(at(base, 'isha'))).toBe(-5);
   });
 
   it('changes Asr with the madhab', () => {
     const hanafi = calculateDayTimes('2026-10-12', DHAKA);
     const shafi = calculateDayTimes('2026-10-12', { ...DHAKA, madhab: 'shafi' });
 
-    expect(shafi[2].time).not.toBe(hanafi[2].time);
-    expect(shafi.filter((entry, i) => entry.prayer !== 'asr').map((e) => e.time)).toEqual(
+    const at = (times: { prayer: string; time: string }[], prayer: string) =>
+      times.find((entry) => entry.prayer === prayer)?.time;
+    expect(at(shafi, 'asr')).not.toBe(at(hanafi, 'asr'));
+    expect(shafi.filter((entry) => entry.prayer !== 'asr').map((e) => e.time)).toEqual(
       hanafi.filter((entry) => entry.prayer !== 'asr').map((e) => e.time),
     );
   });
@@ -105,6 +120,7 @@ describe('isDayPrayer', () => {
 
 describe('findNextPrayer', () => {
   const times = [
+    { prayer: 'tahajjud', time: '00:00' },
     { prayer: 'fajr', time: '04:45' },
     { prayer: 'dhuhr', time: '12:00' },
     { prayer: 'asr', time: '15:30' },
@@ -113,6 +129,7 @@ describe('findNextPrayer', () => {
   ] as const;
 
   it('finds the first prayer still in the future', () => {
+    expect(findNextPrayer([...times], '00:30')).toBe('fajr');
     expect(findNextPrayer([...times], '03:00')).toBe('fajr');
     expect(findNextPrayer([...times], '04:45')).toBe('dhuhr');
     expect(findNextPrayer([...times], '18:00')).toBe('maghrib');
@@ -129,7 +146,9 @@ describe('findNextPrayer', () => {
   });
 });
 
-describe('prayerWindowEnd', () => {  const times = [
+describe('prayerWindowEnd', () => {
+  const times = [
+    { prayer: 'tahajjud', time: '00:00' },
     { prayer: 'fajr', time: '04:45' },
     { prayer: 'dhuhr', time: '11:45' },
     { prayer: 'asr', time: '15:45' },
@@ -138,6 +157,7 @@ describe('prayerWindowEnd', () => {  const times = [
   ] as const;
 
   it('ends each prayer window at the next prayer start', () => {
+    expect(prayerWindowEnd([...times], 'tahajjud')).toBe('04:45');
     expect(prayerWindowEnd([...times], 'fajr')).toBe('11:45');
     expect(prayerWindowEnd([...times], 'dhuhr')).toBe('15:45');
     expect(prayerWindowEnd([...times], 'asr')).toBe('17:35');
@@ -152,6 +172,7 @@ describe('prayerWindowEnd', () => {  const times = [
 
 describe('findCurrentPrayer', () => {
   const times = [
+    { prayer: 'tahajjud', time: '00:00' },
     { prayer: 'fajr', time: '04:45' },
     { prayer: 'dhuhr', time: '11:45' },
     { prayer: 'asr', time: '15:45' },
@@ -159,9 +180,10 @@ describe('findCurrentPrayer', () => {
     { prayer: 'isha', time: '18:50' },
   ] as const;
 
-  it('returns null before the first prayer of the day', () => {
-    expect(findCurrentPrayer([...times], '00:00')).toBeNull();
-    expect(findCurrentPrayer([...times], '04:44')).toBeNull();
+  it('holds Tahajjud from midnight until Fajr', () => {
+    expect(findCurrentPrayer([...times], '00:00')).toBe('tahajjud');
+    expect(findCurrentPrayer([...times], '02:00')).toBe('tahajjud');
+    expect(findCurrentPrayer([...times], '04:44')).toBe('tahajjud');
   });
 
   it('returns the active prayer once its time has started', () => {
@@ -179,5 +201,46 @@ describe('findCurrentPrayer', () => {
 
   it('returns null for an invalid current time', () => {
     expect(findCurrentPrayer([...times], 'bad')).toBeNull();
+  });
+});
+
+describe('restricted windows', () => {
+  const day = [
+    { prayer: 'tahajjud', time: '00:00' },
+    { prayer: 'fajr', time: '04:39' },
+    { prayer: 'dhuhr', time: '11:46' },
+    { prayer: 'asr', time: '15:57' },
+    { prayer: 'maghrib', time: '17:35' },
+    { prayer: 'isha', time: '18:50' },
+  ] as const;
+
+  it('calculates sunrise as a wall-clock time', () => {
+    const sunrise = calculateSunrise('2026-10-12', DHAKA);
+    expect(sunrise).toMatch(/^([01]\d|2[0-3]):[0-5]\d$/);
+  });
+
+  it('wraps minute arithmetic past midnight', () => {
+    expect(addMinutesToWallClock('23:55', 20)).toBe('00:15');
+    expect(addMinutesToWallClock('11:46', -10)).toBe('11:36');
+    expect(addMinutesToWallClock('bad', 10)).toBeNull();
+  });
+
+  it('builds the three pause windows from the day schedule', () => {
+    const windows = calculateRestrictedWindows([...day], '05:52');
+
+    expect(windows.map((window) => window.id)).toEqual(['after-fajr', 'midday', 'after-asr']);
+    expect(windows[0]).toEqual({ id: 'after-fajr', start: '04:39', end: '06:12' });
+    expect(windows[1]).toEqual({ id: 'midday', start: '11:36', end: '11:46' });
+    expect(windows[2]).toEqual({ id: 'after-asr', start: '15:57', end: '17:35' });
+  });
+
+  it('derives real Dhaka windows end to end', () => {
+    const times = calculateDayTimes('2026-10-12', DHAKA);
+    const sunrise = calculateSunrise('2026-10-12', DHAKA);
+    const windows = calculateRestrictedWindows(times, sunrise);
+
+    expect(windows).toHaveLength(3);
+    const fajr = times.find((entry) => entry.prayer === 'fajr')?.time;
+    expect(windows[0].start).toBe(fajr);
   });
 });

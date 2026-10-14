@@ -3,6 +3,8 @@ import { useEffect } from 'react';
 import type { ColorValue } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
+import { useDisplay } from '@/theme/display-context';
+
 export interface AnimatedTabIconProps {
   focused: boolean;
   /** Outline glyph shown when idle. */
@@ -25,10 +27,11 @@ export function AnimatedTabIcon({
   size = 24,
 }: AnimatedTabIconProps) {
   const progress = useSharedValue(focused ? 1 : 0);
+  const { reduceMotion } = useDisplay();
 
   useEffect(() => {
-    progress.value = withSpring(focused ? 1 : 0, { damping: 13, stiffness: 220 });
-  }, [focused, progress]);
+    progress.value = reduceMotion ? (focused ? 1 : 0) : withSpring(focused ? 1 : 0, { damping: 13, stiffness: 220 });
+  }, [focused, progress, reduceMotion]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: 1 + progress.value * 0.22 }],

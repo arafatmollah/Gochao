@@ -66,12 +66,17 @@ function toWallClock(instant: Date, utcOffsetMinutes: number): string {
   return `${hours}:${minutes}`;
 }
 
-/**
- * Calculates the five daily times for a calendar day. Throws a plain Error
- * for an invalid date or unusable coordinates; the service converts that
- * into an `AppError`.
- */
-export function calculateDayTimes(date: string, settings: PrayerSettings): PrayerTime[] {
+/** Tahajjud window opens at local midnight and runs until Fajr. */
+export const TAHAJJUD_START = '00:00';
+/** Minutes after sunrise until voluntary prayer resumes. */
+export const SUNRISE_BUFFER_MINUTES = 20;
+/** Minutes before Dhuhr during which voluntary prayer pauses (midday). */
+export const MIDDAY_BUFFER_MINUTES = 10;
+
+function loadPrayerTimes(
+  date: string,
+  settings: PrayerSettings,
+): { times: PrayerTimes; parsed: Date } {
   const parsed = parseIsoDate(date);
   if (!parsed) {
     throw new Error(`Invalid prayer date: ${date}`);
@@ -81,12 +86,25 @@ export function calculateDayTimes(date: string, settings: PrayerSettings): Praye
   }
   // Midday avoids any DST-boundary edge when adhan reads the Y/M/D parts.
   const midday = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate(), 12);
-  const times = new PrayerTimes(
-    new Coordinates(settings.latitude, settings.longitude),
-    midday,
-    buildCalculationParameters(settings),
-  );
-  const byPrayer: Record<PrayerName, Date> = {
+  return {
+    times: new PrayerTimes(
+      new Coordinates(settings.latitude, settings.longitude),
+      midday,
+      buildCalculationParameters(settings),
+    ),
+    parsed,
+  };
+}
+
+/**
+ * Calculates the daily times for a calendar day: Tahajjud (fixed at local
+ * midnight) plus the five adhan-calculated prayers. Throws a plain Error
+ * for an invalid date or unusable coordinates; the service converts that
+ * into an `AppError`.
+ */
+export function calculateDayTimes(date: string, settings: PrayerSettings): PrayerTime[] {
+  const { times } = loadPrayerTimes(date, settings);
+  const byPrayer = {
     fajr: times.fajr,
     dhuhr: times.dhuhr,
     asr: times.asr,
@@ -95,8 +113,17 @@ export function calculateDayTimes(date: string, settings: PrayerSettings): Praye
   };
   return PRAYERS.map((prayer) => ({
     prayer,
-    time: toWallClock(byPrayer[prayer], settings.utcOffsetMinutes),
+    time:
+      prayer === 'tahajjud'
+        ? TAHAJJUD_START
+        : toWallClock(byPrayer[prayer], settings.utcOffsetMinutes),
   }));
+}
+
+/** Sunrise wall-clock for a calendar day (drives the restricted window). */
+export function calculateSunrise(date: string, settings: PrayerSettings): string {
+  const { times } = loadPrayerTimes(date, settings);
+  return toWallClock(times.sunrise, settings.utcOffsetMinutes);
 }
 
 /** Current device-local wall-clock `HH:mm`. */
@@ -163,6 +190,60 @@ export function minutesUntil(fromTime: string, toTime: string): number | null {
   return to - from;
 }
 
+/** Shifts a wall-clock `HH:mm` by whole minutes, wrapping past midnight. */
+export function addMinutesToWallClock(time: string, minutes: number): string | null {
+  const base = wallClockToMinutes(time);
+  if (base === null) {
+    return null;
+  }
+  const shifted = ((base + minutes) % 1440 + 1440) % 1440;
+  return `${String(Math.floor(shifted / 60)).padStart(2, '0')}:${String(shifted % 60).padStart(2, '0')}`;
+}
+
+export type RestrictedWindowId = 'after-fajr' | 'midday' | 'after-asr';
+
+export interface RestrictedWindow {
+  id: RestrictedWindowId;
+  /** Window start/end as wall-clock `HH:mm`. */
+  start: string;
+  end: string;
+}
+
+/**
+ * Voluntary-prayer pause windows for a day: after Fajr until the sun is up,
+ * the minutes around solar noon before Dhuhr, and after Asr until Maghrib.
+ * Windows with unparsable bounds are skipped, never fabricated.
+ */
+export function calculateRestrictedWindows(
+  dayTimes: PrayerTime[],
+  sunrise: string,
+): RestrictedWindow[] {
+  const at = (prayer: PrayerName): string | null =>
+    dayTimes.find((entry) => entry.prayer === prayer)?.time ?? null;
+  const fajr = at('fajr');
+  const dhuhr = at('dhuhr');
+  const asr = at('asr');
+  const maghrib = at('maghrib');
+
+  const windows: RestrictedWindow[] = [];
+  if (fajr) {
+    const end = addMinutesToWallClock(sunrise, SUNRISE_BUFFER_MINUTES);
+    if (end) {
+      windows.push({ id: 'after-fajr', start: fajr, end });
+    }
+  }
+  if (dhuhr) {
+    const start = addMinutesToWallClock(dhuhr, -MIDDAY_BUFFER_MINUTES);
+    if (start) {
+      windows.push({ id: 'midday', start, end: dhuhr });
+    }
+  }
+  if (asr && maghrib) {
+    windows.push({ id: 'after-asr', start: asr, end: maghrib });
+  }
+  return windows;
+}
+
 /**
  * End of a prayer's availability window: the next prayer's start time, so
  * e.g. Dhuhr at `11:45` followed by Asr at `15:45` is available `11:45`
@@ -170,8 +251,7 @@ export function minutesUntil(fromTime: string, toTime: string): number | null {
  * (its window runs into tomorrow's Fajr), reported as `null` so the UI
  * shows just its start time. Unknown prayers also yield `null`.
  */
-export function prayerWindowEnd(times: PrayerTime[], prayer: PrayerName): string | null {
-  const index = times.findIndex((entry) => entry.prayer === prayer);
+export function prayerWindowEnd(times: PrayerTime[], prayer: PrayerName): string | null {  const index = times.findIndex((entry) => entry.prayer === prayer);
   if (index < 0) {
     return null;
   }

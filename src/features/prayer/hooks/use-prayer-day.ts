@@ -6,7 +6,8 @@ import { SqlitePrayerRepository } from '@/db/repositories/prayer-repository';
 import { toSqlDatabase } from '@/db/sqlite-adapter';
 import { useTranslation } from '@/i18n';
 import { translateError } from '@/i18n/errors';
-import { findCurrentPrayer, findNextPrayer, minutesUntil, nowWallClock, prayerWindowEnd } from '@/services/prayer-calculation';
+import { calculateRestrictedWindows, calculateSunrise, findCurrentPrayer, findNextPrayer, minutesUntil, nowWallClock, prayerWindowEnd } from '@/services/prayer-calculation';
+import type { RestrictedWindow } from '@/services/prayer-calculation';
 import { createPrayerService } from '@/services/prayer-service';
 import type { PrayerDay, PrayerName, PrayerStatus } from '@/types/prayer';
 import { todayIsoDate } from '@/utils/dates';
@@ -36,6 +37,8 @@ export interface UsePrayerDayResult {
   next: NextPrayerInfo | null;
   /** Currently active prayer window, or null before Fajr. */
   current: CurrentPrayerInfo | null;
+  /** Voluntary-prayer pause windows for today (makruh times). */
+  restricted: RestrictedWindow[];
   prayedCount: number;
   loading: boolean;
   refreshing: boolean;
@@ -59,6 +62,7 @@ export function usePrayerDay(): UsePrayerDayResult {
 
   const date = todayIsoDate();
   const [day, setDay] = useState<PrayerDay | null>(null);
+  const [restricted, setRestricted] = useState<RestrictedWindow[]>([]);
   const [clockTick, setClockTick] = useState(() => nowWallClock());
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -70,9 +74,23 @@ export function usePrayerDay(): UsePrayerDayResult {
   const load = useCallback(async () => {
     const requestId = ++requestIdRef.current;
     try {
-      const loaded = await service.getDay(date);
+      const [loaded, settings] = await Promise.all([
+        service.getDay(date),
+        service.getSettings(),
+      ]);
       if (requestIdRef.current !== requestId) return;
       setDay(loaded);
+      try {
+        const sunrise = calculateSunrise(date, settings);
+        setRestricted(
+          calculateRestrictedWindows(
+            loaded.prayers.map(({ prayer, time }) => ({ prayer, time })),
+            sunrise,
+          ),
+        );
+      } catch {
+        setRestricted([]);
+      }
       setError(null);
     } catch (loadError) {
       if (requestIdRef.current !== requestId) return;
@@ -172,6 +190,7 @@ export function usePrayerDay(): UsePrayerDayResult {
     day,
     next,
     current,
+    restricted,
     prayedCount,
     loading,
     refreshing,

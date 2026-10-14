@@ -17,6 +17,7 @@ function makeItem(overrides: Partial<WatchItem> = {}): WatchItem {
     url: null,
     rating: null,
     notes: null,
+    source: 'user',
     createdAt: T0,
     updatedAt: T0,
     ...overrides,

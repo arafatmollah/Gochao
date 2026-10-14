@@ -42,6 +42,7 @@ export default function DashboardScreen() {
     recentNotes,
     openFamilyRequests,
     prayerDay,
+    prayerRestricted,
     dueDoses,
     today,
     loading,
@@ -166,6 +167,7 @@ export default function DashboardScreen() {
           <View style={styles.prayerWrapper}>
             <PrayerWidget
               day={prayerDay}
+              restricted={prayerRestricted}
               onPress={openPrayer}
               testID="dashboard-prayer-widget"
             />

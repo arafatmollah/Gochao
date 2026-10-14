@@ -33,12 +33,23 @@ describe('MoreScreen', () => {
   it('lists every theme with a selectable row', async () => {
     await render(<MoreScreen />);
 
-    for (const id of ['default', 'dark', 'light', 'anime', 'loki', 'ironman', 'strange']) {
+    for (const id of ['default', 'dark', 'light', 'anime', 'loki', 'ironman', 'strange', 'onepiece']) {
       expect(screen.getByTestId(`theme-option-${id}`)).toBeTruthy();
     }
     // Switching outside a provider is a safe no-op render.
     await fireEvent.press(screen.getByTestId('theme-option-dark'));
     expect(screen.getByTestId('theme-option-dark')).toBeTruthy();
+  });
+
+  it('opens backup & restore from its entry', async () => {
+    await render(<MoreScreen />);
+
+    expect(screen.getByTestId('more-backup-entry')).toBeTruthy();
+    expect(screen.getByText('Backup & restore')).toBeTruthy();
+    expect(screen.getByText('Soon')).toBeTruthy();
+
+    await fireEvent.press(screen.getByTestId('more-backup-entry'));
+    expect(mockPush).toHaveBeenCalledWith('/backup');
   });
 
   it('links to the live family module', async () => {
@@ -132,16 +143,16 @@ describe('MoreScreen', () => {
     expect(mockPush).toHaveBeenCalledWith('/about');
   });
 
-  it('groups language, about and roadmap content', async () => {
+  it('groups language and about content (backup is live, not upcoming)', async () => {
     await render(<MoreScreen />);
 
     expect(screen.getByText('Language')).toBeTruthy();
     expect(screen.getByTestId('language-en')).toBeTruthy();
     expect(screen.getByTestId('language-bn')).toBeTruthy();
 
-    expect(screen.getByText('Coming later')).toBeTruthy();
-    expect(screen.getByText('Backup & restore')).toBeTruthy();
-    expect(screen.getByText('Phase 9')).toBeTruthy();
+    // Backup shipped, so the roadmap card hides when nothing is upcoming.
+    expect(screen.queryByText('Coming later')).toBeNull();
+    expect(screen.queryByText('Phase 9')).toBeNull();
     // The finance, notes, and family modules are live, so none are listed as upcoming.
     expect(screen.queryByText('Income & expenses')).toBeNull();
     expect(screen.queryByText('Phase 4')).toBeNull();

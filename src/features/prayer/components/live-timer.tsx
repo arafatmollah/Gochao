@@ -7,6 +7,7 @@ import { useNow } from '@/hooks/use-now';
 import { useTranslation } from '@/i18n';
 import { formatCountdownHMS } from '@/i18n/format';
 import { wallClockToMinutes } from '@/services/prayer-calculation';
+import { useDisplay } from '@/theme/display-context';
 import { Spacing } from '@/theme/tokens';
 import { useAppTheme } from '@/theme/theme-context';
 
@@ -28,10 +29,15 @@ export function LiveTimer({ targetTime, tone = 'light', testID }: LiveTimerProps
   const { t, locale } = useTranslation();
   const now = useNow(1000);
   const pulse = useSharedValue(1);
+  const { reduceMotion } = useDisplay();
 
   useEffect(() => {
+    if (reduceMotion) {
+      pulse.value = 1;
+      return;
+    }
     pulse.value = withRepeat(withTiming(0.35, { duration: 900 }), -1, true);
-  }, [pulse]);
+  }, [pulse, reduceMotion]);
 
   const dotStyle = useAnimatedStyle(() => ({ opacity: pulse.value }));
 

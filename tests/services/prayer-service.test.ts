@@ -96,8 +96,8 @@ describe('PrayerService', () => {
   describe('schedules', () => {
     it('calculates, caches, and reuses a day', async () => {
       const first = await service.getDay('2026-10-12');
-      expect(first.prayers).toHaveLength(5);
-      expect(first.prayers.map((entry) => entry.status)).toEqual([null, null, null, null, null]);
+      expect(first.prayers).toHaveLength(6);
+      expect(first.prayers.map((entry) => entry.status)).toEqual([null, null, null, null, null, null]);
 
       const second = await service.getDay('2026-10-12');
       expect(second).toEqual(first);
@@ -106,7 +106,7 @@ describe('PrayerService', () => {
         'SELECT date, prayer FROM prayer_day_times WHERE date = ?',
         ['2026-10-12'],
       );
-      expect(cached).toHaveLength(5);
+      expect(cached).toHaveLength(6);
     });
 
     it('recalculates when settings change', async () => {

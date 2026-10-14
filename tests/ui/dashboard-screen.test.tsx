@@ -268,7 +268,7 @@ describe('DashboardScreen', () => {
       const timer = within(widget).getByTestId('dashboard-prayer-timer');
       expect(within(timer).getByText('02:00:00')).toBeTruthy();
       expect(within(timer).getByText('left')).toBeTruthy();
-      expect(within(widget).getByText('1 of 5 prayed')).toBeTruthy();
+      expect(within(widget).getByText('1 of 6 prayed')).toBeTruthy();
 
       await fireEvent.press(widget);
       expect(mockPush).toHaveBeenCalledWith('/prayer');
@@ -282,6 +282,31 @@ describe('DashboardScreen', () => {
     await render(<DashboardScreen />);
 
     expect(screen.queryByTestId('dashboard-prayer-widget')).toBeNull();
+  });
+
+  it('shows the restricted state instead of prayers during a pause window', async () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2026, 9, 11, 15, 10, 0));
+    try {
+      mockUseDashboard.mockReturnValue(
+        baseHookState({
+          prayerDay: makePrayerDay(),
+          prayerRestricted: [{ id: 'after-asr', start: '15:00', end: '15:30' }],
+        }),
+      );
+      await render(<DashboardScreen />);
+
+      const widget = screen.getByTestId('dashboard-prayer-widget');
+      expect(within(widget).getByText('Restricted time')).toBeTruthy();
+      expect(within(widget).getByText('3:00 PM – 3:30 PM')).toBeTruthy();
+      // Countdown runs to the pause end from the faked 15:10 clock.
+      const timer = within(widget).getByTestId('dashboard-prayer-timer');
+      expect(within(timer).getByText('00:20:00')).toBeTruthy();
+      // The day strip still renders underneath for context.
+      expect(within(widget).getByText('Fajr')).toBeTruthy();
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   it('previews today’s doses with logging actions and opens health', async () => {

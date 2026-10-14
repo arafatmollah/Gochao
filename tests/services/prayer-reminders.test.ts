@@ -92,6 +92,22 @@ describe('prayer reminders', () => {
     expect(reminderIdentifier('isha')).toBe('jibon-prayer-isha');
   });
 
+  it('schedules Tahajjud at midnight like any other prayer', async () => {
+    const scheduler = makeScheduler();
+    await scheduleDailyPrayerReminders(
+      [{ prayer: 'tahajjud', time: '00:00', texts: { title: 'Tahajjud', body: '12:00 AM' } }],
+      scheduler,
+    );
+
+    expect(scheduler.scheduled).toHaveLength(1);
+    expect(scheduler.scheduled[0]).toMatchObject({
+      identifier: 'jibon-prayer-tahajjud',
+      title: 'Tahajjud',
+      hour: 0,
+      minute: 0,
+    });
+  });
+
   it('cancels previous schedules before scheduling (idempotent reschedule)', async () => {
     const scheduler = makeScheduler();
     await scheduleDailyPrayerReminders([...ENTRIES], scheduler);
@@ -116,11 +132,12 @@ describe('prayer reminders', () => {
     expect(scheduler.scheduled.map((call) => call.identifier)).toEqual(['jibon-prayer-dhuhr']);
   });
 
-  it('cancels exactly the five prayer schedules', async () => {
+  it('cancels exactly the six prayer schedules', async () => {
     const scheduler = makeScheduler();
     await cancelPrayerReminders(scheduler);
 
     expect(scheduler.cancelled).toEqual([
+      'jibon-prayer-tahajjud',
       'jibon-prayer-fajr',
       'jibon-prayer-dhuhr',
       'jibon-prayer-asr',

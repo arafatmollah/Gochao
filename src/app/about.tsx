@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useMemo, useState } from 'react';
@@ -88,6 +89,28 @@ export default function AboutScreen() {
           onPress={() => void openContact()}
           testID="about-contact-entry"
         />
+        <AboutRow
+          icon="chatbox-ellipses-outline"
+          title={t('about.feedbackEntry')}
+          hint={t('about.feedbackEntryHint')}
+          onPress={() => router.push('/feedback')}
+          testID="about-feedback-entry"
+        />
+        <LinearGradient
+          colors={[colors.hero, colors.primaryPressed]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.signature}>
+          <View style={styles.signatureMedallion} testID="about-signature">
+            <Ionicons name="code-slash" size={IconSize.lg} color={colors.heroText} />
+          </View>
+          <AppText variant="caption" style={styles.signatureLabel}>
+            {t('about.builtByLabel')}
+          </AppText>
+          <AppText variant="heroValue" style={styles.signatureName}>
+            Arafat Shuvo
+          </AppText>
+        </LinearGradient>
       </ScrollView>
     </Screen>
   );
@@ -163,5 +186,29 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   rowBody: {
     flex: 1,
     gap: 2,
+  },
+  signature: {
+    alignItems: 'center',
+    gap: Spacing.xs,
+    borderRadius: Radius.xl,
+    paddingVertical: Spacing.xxl,
+    paddingHorizontal: Spacing.lg,
+    overflow: 'hidden',
+  },
+  signatureMedallion: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: colors.heroTrack,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  signatureLabel: {
+    color: colors.heroMuted,
+    letterSpacing: 3,
+    textTransform: 'uppercase',
+  },
+  signatureName: {
+    color: colors.heroText,
   },
 });

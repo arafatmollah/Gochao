@@ -27,6 +27,9 @@ export interface TextFieldProps {
   maxLength?: number;
   returnKeyType?: TextInputProps['returnKeyType'];
   onSubmitEditing?: () => void;
+  autoCapitalize?: TextInputProps['autoCapitalize'];
+  autoCorrect?: boolean;
+  secureTextEntry?: boolean;
   testID?: string;
   accessibilityHint?: string;
 }
@@ -44,6 +47,9 @@ export function TextField({
   maxLength,
   returnKeyType,
   onSubmitEditing,
+  autoCapitalize,
+  autoCorrect,
+  secureTextEntry,
   testID,
   accessibilityHint,
 }: TextFieldProps) {
@@ -83,6 +89,9 @@ export function TextField({
         maxLength={maxLength}
         returnKeyType={returnKeyType}
         onSubmitEditing={onSubmitEditing}
+        autoCapitalize={autoCapitalize}
+        autoCorrect={autoCorrect}
+        secureTextEntry={secureTextEntry}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         accessibilityLabel={label}

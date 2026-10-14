@@ -10,6 +10,7 @@ interface WatchItemRow {
   url: string | null;
   rating: number | null;
   notes: string | null;
+  source: WatchItem['source'];
   created_at: string;
   updated_at: string;
 }
@@ -23,6 +24,7 @@ function mapRow(row: WatchItemRow): WatchItem {
     url: row.url,
     rating: row.rating,
     notes: row.notes,
+    source: row.source,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -63,7 +65,7 @@ function buildFilter(filter: WatchFilter): { where: string; params: SqlParam[] }
   };
 }
 
-const COLUMNS = 'id, title, kind, status, url, rating, notes, created_at, updated_at';
+const COLUMNS = 'id, title, kind, status, url, rating, notes, source, created_at, updated_at';
 
 const ORDER = `
   ORDER BY CASE status
@@ -76,8 +78,8 @@ export class SqliteWatchlistRepository implements WatchlistRepository {
 
   async insert(item: WatchItem): Promise<void> {
     await this.db.runAsync(
-      `INSERT INTO watchlist_items (id, title, kind, status, url, rating, notes, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO watchlist_items (id, title, kind, status, url, rating, notes, source, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         item.id,
         item.title,
@@ -86,6 +88,7 @@ export class SqliteWatchlistRepository implements WatchlistRepository {
         item.url,
         item.rating,
         item.notes,
+        item.source,
         item.createdAt,
         item.updatedAt,
       ],
@@ -95,9 +98,9 @@ export class SqliteWatchlistRepository implements WatchlistRepository {
   async update(item: WatchItem): Promise<void> {
     await this.db.runAsync(
       `UPDATE watchlist_items
-          SET title = ?, kind = ?, status = ?, url = ?, rating = ?, notes = ?, updated_at = ?
+          SET title = ?, kind = ?, status = ?, url = ?, rating = ?, notes = ?, source = ?, updated_at = ?
         WHERE id = ?`,
-      [item.title, item.kind, item.status, item.url, item.rating, item.notes, item.updatedAt, item.id],
+      [item.title, item.kind, item.status, item.url, item.rating, item.notes, item.source, item.updatedAt, item.id],
     );
   }
 

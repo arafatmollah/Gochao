@@ -17,6 +17,7 @@ describe('theme palettes', () => {
       'loki',
       'ironman',
       'strange',
+      'onepiece',
     ]);
     expect(DEFAULT_THEME).toBe('default');
     for (const id of THEME_IDS) {

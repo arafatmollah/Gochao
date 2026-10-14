@@ -39,12 +39,20 @@ describe('migration runner', () => {
     expect(names).toContain('appointments');
     expect(names).toContain('health_records');
     expect(names).toContain('watchlist_items');
+    expect(names).toContain('entertainment_media');
+    expect(names).toContain('entertainment_episodes');
+    expect(names).toContain('entertainment_notified_events');
 
     const prayerColumns = await db.getAllAsync<{ name: string }>(
       `SELECT name FROM pragma_table_info('prayer_settings')`,
     );
     expect(prayerColumns.map((column) => column.name)).toContain('reminders_enabled');
     expect(prayerColumns.map((column) => column.name)).toContain('utc_offset_minutes');
+
+    const watchlistColumns = await db.getAllAsync<{ name: string }>(
+      `SELECT name FROM pragma_table_info('watchlist_items')`,
+    );
+    expect(watchlistColumns.map((column) => column.name)).toContain('source');
 
     const indexes = await db.getAllAsync<{ name: string }>(
       `SELECT name FROM sqlite_master WHERE type = 'index' AND name LIKE 'idx_%' ORDER BY name`,

@@ -40,6 +40,9 @@ describe('AboutScreen', () => {
     await fireEvent.press(screen.getByTestId('about-version-entry'));
     expect(mockPush).toHaveBeenCalledWith('/about-version-history');
 
+    await fireEvent.press(screen.getByTestId('about-feedback-entry'));
+    expect(mockPush).toHaveBeenCalledWith('/feedback');
+
     await fireEvent.press(screen.getByTestId('about-update-entry'));
     expect(mockPush).toHaveBeenCalledWith('/about-update');
 
@@ -50,8 +53,15 @@ describe('AboutScreen', () => {
     expect(mockPush).toHaveBeenCalledWith('/about-privacy');
   });
 
-  it('opens the developer contact link in a browser', async () => {
+  it('shows the builder signature', async () => {
     await render(<AboutScreen />);
+
+    expect(screen.getByTestId('about-signature')).toBeTruthy();
+    expect(screen.getByText('Arafat Shuvo')).toBeTruthy();
+    expect(screen.getByText('Designed & built by')).toBeTruthy();
+  });
+
+  it('opens the developer contact link in a browser', async () => {    await render(<AboutScreen />);
 
     expect(CONTACT_URL).toMatch(/^https:\/\//);
     await fireEvent.press(screen.getByTestId('about-contact-entry'));

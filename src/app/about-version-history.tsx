@@ -7,13 +7,14 @@ import { Badge } from '@/components/badge';
 import { Card } from '@/components/card';
 import { Screen } from '@/components/screen';
 import { ScreenHeader } from '@/components/screen-header';
+import { CHANGELOG } from '@/features/about/changelog';
 import { useTranslation } from '@/i18n';
-import { Spacing } from '@/theme/tokens';
 import { useAppTheme } from '@/theme/theme-context';
+import { Spacing } from '@/theme/tokens';
 
 export default function AboutVersionHistoryScreen() {
-  const { colors } = useAppTheme();
   const { t } = useTranslation();
+  const { colors } = useAppTheme();
   const version = Constants.expoConfig?.version ?? '1.0.0';
 
   function goBack() {
@@ -33,19 +34,24 @@ export default function AboutVersionHistoryScreen() {
         testID="about-version-header"
       />
       <ScrollView contentContainerStyle={styles.content}>
-        <Card style={styles.card} testID="about-version-1-0-0">
-          <View style={styles.versionRow}>
-            <AppText variant="bodyStrong">1.0.0</AppText>
-            <Badge
-              label={t('more.aboutVersion', { version })}
-              color={colors.primary}
-              backgroundColor={colors.primarySoft}
-            />
-          </View>
-          <AppText variant="body" color="textSecondary">
-            {t('about.v100highlights')}
-          </AppText>
-        </Card>
+        {CHANGELOG.map((entry) => (
+          <Card
+            key={entry.version}
+            style={styles.card}
+            testID={`about-version-${entry.version.replace(/\./g, '-')}`}>
+            <View style={styles.versionRow}>
+              <AppText variant="bodyStrong">{entry.version}</AppText>
+              <Badge
+                label={t('more.aboutVersion', { version })}
+                color={colors.primary}
+                backgroundColor={colors.primarySoft}
+              />
+            </View>
+            <AppText variant="body" color="textSecondary">
+              {t(entry.highlightsKey)}
+            </AppText>
+          </Card>
+        ))}
       </ScrollView>
     </Screen>
   );

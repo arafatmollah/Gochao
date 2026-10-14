@@ -9,6 +9,10 @@ export type WatchKind = (typeof WATCH_KINDS)[number];
 export const WATCH_STATUSES = ['want_to_watch', 'watching', 'watched'] as const;
 export type WatchStatus = (typeof WATCH_STATUSES)[number];
 
+/** Where a watchlist row came from: hand-added or TMDB recommendations. */
+export const WATCH_SOURCES = ['user', 'tmdb'] as const;
+export type WatchSource = (typeof WATCH_SOURCES)[number];
+
 export const WATCH_TITLE_MAX_LENGTH = 160;
 export const WATCH_URL_MAX_LENGTH = 500;
 export const WATCH_NOTES_MAX_LENGTH = 2000;
@@ -26,6 +30,8 @@ export interface WatchItem {
   /** 1–5 stars, or null when unrated. */
   rating: number | null;
   notes: string | null;
+  /** `user` for hand-added rows, `tmdb` for synced recommendations. */
+  source: WatchSource;
   /** ISO-8601 UTC timestamp. */
   createdAt: string;
   /** ISO-8601 UTC timestamp. */
@@ -39,6 +45,7 @@ export interface CreateWatchItemInput {
   url?: string | null;
   rating?: number | null;
   notes?: string | null;
+  source?: WatchSource;
 }
 
 export interface UpdateWatchItemInput {

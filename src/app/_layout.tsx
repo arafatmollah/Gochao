@@ -1,16 +1,23 @@
 import { DefaultTheme, Stack, ThemeProvider, router } from 'expo-router';
-import { SQLiteProvider } from 'expo-sqlite';
+import { SQLiteProvider, useSQLiteContext } from 'expo-sqlite';
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import Constants from 'expo-constants';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 
 import { ErrorState } from '@/components/error-state';
 import { LoadingState } from '@/components/loading-state';
 import { NotificationBootstrap } from '@/components/notification-bootstrap';
+import { BackupBootstrap } from '@/components/backup-bootstrap';
+import { EntertainmentBootstrap } from '@/components/entertainment-bootstrap';
 import { DATABASE_NAME, initializeDatabase } from '@/db/database';
+import { SqliteSettingsRepository, VERSION_SEEN_KEY } from '@/db/repositories/settings-repository';
+import { toSqlDatabase } from '@/db/sqlite-adapter';
 import { I18nProvider } from '@/i18n';
+import { compareVersions } from '@/services/app-update';
 import { Colors, Spacing } from '@/theme/tokens';
 import { AppThemeProvider, useAppTheme } from '@/theme/theme-context';
+import { DisplayProvider } from '@/theme/display-context';
 import { THEME_STATUS_BAR } from '@/theme/themes';
 
 function navigateToNotificationUrl(url?: unknown) {
@@ -128,9 +135,13 @@ export default function RootLayout() {
             onError={reportDbError}>
             <I18nProvider onReady={markI18nReady}>
               <AppThemeProvider>
-                <DatabaseReady onReady={markDbReady} />
-                <NotificationBootstrap />
-                <ThemedShell />
+                <DisplayProvider>
+                  <DatabaseReady onReady={markDbReady} />
+                  <NotificationBootstrap />
+                  <BackupBootstrap />
+                  <EntertainmentBootstrap />
+                  <ThemedShell />
+                </DisplayProvider>
               </AppThemeProvider>
             </I18nProvider>
           </SQLiteProvider>
@@ -151,6 +162,34 @@ export default function RootLayout() {
  */
 function ThemedShell() {
   const { colors, theme } = useAppTheme();
+  const db = useSQLiteContext();
+  const versionGateRun = useRef(false);
+
+  // Shows What's New once per version upgrade (fresh installs just record
+  // the version silently).
+  useEffect(() => {
+    if (versionGateRun.current) {
+      return;
+    }
+    versionGateRun.current = true;
+    void (async () => {
+      try {
+        const repo = new SqliteSettingsRepository(toSqlDatabase(db));
+        const current = Constants.expoConfig?.version ?? '1.0.0';
+        const seen = await repo.get(VERSION_SEEN_KEY);
+        if (seen === null) {
+          await repo.set(VERSION_SEEN_KEY, current);
+          return;
+        }
+        if (compareVersions(current, seen) > 0) {
+          await repo.set(VERSION_SEEN_KEY, current);
+          router.push('/whats-new');
+        }
+      } catch {
+        // Version notes must never break app start.
+      }
+    })();
+  }, [db]);
 
   const navigationTheme = useMemo(
     () => ({
@@ -208,7 +247,10 @@ function ThemedShell() {
         <Stack.Screen name="entertainment" />
         <Stack.Screen name="entertainment-form" options={{ presentation: 'modal' }} />
         <Stack.Screen name="about" options={{ headerShown: false }} />
+        <Stack.Screen name="backup" options={{ headerShown: false }} />
+        <Stack.Screen name="feedback" options={{ headerShown: false }} />
         <Stack.Screen name="about-update" options={{ headerShown: false }} />
+        <Stack.Screen name="whats-new" options={{ presentation: 'modal', headerShown: false }} />
         <Stack.Screen name="about-version-history" options={{ headerShown: false }} />
         <Stack.Screen name="about-terms" options={{ headerShown: false }} />
         <Stack.Screen name="about-privacy" options={{ headerShown: false }} />

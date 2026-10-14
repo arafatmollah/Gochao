@@ -170,8 +170,8 @@ export class SqlitePrayerRepository implements PrayerRepository {
       `SELECT prayer, time, calc_method, madhab, latitude, longitude
          FROM prayer_day_times WHERE date = ?
         ORDER BY CASE prayer
-          WHEN 'fajr' THEN 0 WHEN 'dhuhr' THEN 1 WHEN 'asr' THEN 2
-          WHEN 'maghrib' THEN 3 ELSE 4 END ASC`,
+          WHEN 'tahajjud' THEN 0 WHEN 'fajr' THEN 1 WHEN 'dhuhr' THEN 2
+          WHEN 'asr' THEN 3 WHEN 'maghrib' THEN 4 ELSE 5 END ASC`,
       [date],
     );
     return rows.map((row) => ({
@@ -221,8 +221,8 @@ export class SqlitePrayerRepository implements PrayerRepository {
       `SELECT date, prayer, status, logged_at, updated_at FROM prayer_logs
         WHERE date >= ? AND date <= ?
         ORDER BY date ASC, CASE prayer
-          WHEN 'fajr' THEN 0 WHEN 'dhuhr' THEN 1 WHEN 'asr' THEN 2
-          WHEN 'maghrib' THEN 3 ELSE 4 END ASC`,
+          WHEN 'tahajjud' THEN 0 WHEN 'fajr' THEN 1 WHEN 'dhuhr' THEN 2
+          WHEN 'asr' THEN 3 WHEN 'maghrib' THEN 4 ELSE 5 END ASC`,
       [startDate, endDate],
     );
     return rows.map(mapLogRow);

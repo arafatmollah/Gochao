@@ -234,6 +234,7 @@ export function makePrayerDay(overrides: Partial<PrayerDay> = {}): PrayerDay {
   return {
     date: overrides.date ?? '2026-10-11',
     prayers: overrides.prayers ?? [
+      { prayer: 'tahajjud', time: '00:00', status: null },
       { prayer: 'fajr', time: '04:45', status: 'prayed' },
       { prayer: 'dhuhr', time: '12:00', status: null },
       { prayer: 'asr', time: '15:30', status: null },

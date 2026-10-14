@@ -188,6 +188,22 @@ const FEATURES: TargetDef[] = [
     icon: 'information-circle-outline',
     keywords: ['about', 'info', 'সম্পর্কে'],
   },
+  {
+    id: 'go-feedback',
+    kind: 'feature',
+    titleKey: 'about.feedbackEntry',
+    hintKey: 'about.feedbackEntryHint',
+    icon: 'chatbox-ellipses-outline',
+    keywords: ['feedback', 'bug', 'report', 'suggest', 'মতামত', 'বাগ'],
+  },
+  {
+    id: 'go-backup',
+    kind: 'feature',
+    titleKey: 'more.backupEntry',
+    hintKey: 'more.backupEntryHint',
+    icon: 'cloud-upload-outline',
+    keywords: ['backup', 'restore', 'google', 'drive', 'sync', 'ব্যাকআপ', 'রিস্টোর'],
+  },
 ];
 
 const SETTINGS: TargetDef[] = [

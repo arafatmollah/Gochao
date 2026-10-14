@@ -6,6 +6,8 @@ import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 import type { ThemeColors } from '@/theme/tokens';
 import { useAppTheme } from '@/theme/theme-context';
 
+import { ThemeArt } from './theme-art';
+
 export interface ScreenProps {
   children: ReactNode;
   /** Safe-area edges to apply; defaults to top + bottom for full screens. */
@@ -18,7 +20,10 @@ export function Screen({ children, edges = ['top', 'bottom'], style }: ScreenPro
   const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <SafeAreaView style={styles.safeArea} edges={edges}>
-      <View style={[styles.container, style]}>{children}</View>
+      <View style={[styles.container, style]}>
+        <ThemeArt />
+        {children}
+      </View>
     </SafeAreaView>
   );
 }

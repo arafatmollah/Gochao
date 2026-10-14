@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 import { defaultScheduler, type ReminderScheduler } from './prayer-reminders';
 
 export type { ReminderScheduler };
@@ -107,5 +109,35 @@ export async function cancelDailyNotification(
     await scheduler.cancelScheduledNotificationAsync(identifier);
   } catch {
     // Already gone or unschedulable; nothing to do.
+  }
+}
+
+/**
+ * Fires one immediate local notification (release alerts, update pings).
+ * Never prompts for permission and never throws: returns whether anything
+ * was scheduled. Web is a no-op (no native module).
+ */
+export async function sendImmediateNotification(
+  title: string,
+  body: string,
+  url: string,
+): Promise<boolean> {
+  if (Platform.OS === 'web') {
+    return false;
+  }
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const Notifications = require('expo-notifications');
+    const permission = await Notifications.getPermissionsAsync();
+    if (permission?.granted !== true) {
+      return false;
+    }
+    await Notifications.scheduleNotificationAsync({
+      content: { title, body, data: { url } },
+      trigger: null,
+    });
+    return true;
+  } catch {
+    return false;
   }
 }

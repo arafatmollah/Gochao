@@ -11,6 +11,7 @@ import { ScreenHeader } from '@/components/screen-header';
 import { useTranslation } from '@/i18n';
 import { CardShadow, IconSize, Radius, Spacing } from '@/theme/tokens';
 import { useAppTheme } from '@/theme/theme-context';
+import { useDisplay } from '@/theme/display-context';
 import { THEMES, THEME_IDS } from '@/theme/themes';
 import type { ThemeColors } from '@/theme/tokens';
 import { useMemo } from 'react';
@@ -22,13 +23,12 @@ interface UpcomingModule {
   phase: number;
 }
 
-const UPCOMING_MODULES: UpcomingModule[] = [
-  { key: 'backup', icon: 'cloud-download-outline', phase: 9 },
-];
+const UPCOMING_MODULES: UpcomingModule[] = [];
 
 export default function MoreScreen() {
   const { t, locale, setLocale } = useTranslation();
   const { colors, theme, setTheme } = useAppTheme();
+  const { textScale, setTextScale, reduceMotion, setReduceMotion } = useDisplay();
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
   return (
@@ -157,6 +157,29 @@ export default function MoreScreen() {
         </Pressable>
 
         <Pressable
+          onPress={() => router.push('/backup')}
+          accessibilityRole="button"
+          accessibilityLabel={t('more.backupEntry')}
+          testID="more-backup-entry"
+          style={({ pressed }) => [styles.entryCard, pressed && styles.entryCardPressed]}>
+          <View style={styles.entryIcon}>
+            <Ionicons name="cloud-upload-outline" size={IconSize.md} color={colors.primary} />
+          </View>
+          <View style={styles.entryBody}>
+            <AppText variant="bodyStrong">{t('more.backupEntry')}</AppText>
+            <AppText variant="caption" color="textSecondary">
+              {t('more.backupEntryHint')}
+            </AppText>
+          </View>
+          <Badge
+            label={t('more.soonBadge')}
+            color={colors.textMuted}
+            backgroundColor={colors.surfaceMuted}
+          />
+          <Ionicons name="chevron-forward" size={IconSize.md} color={colors.textMuted} />
+        </Pressable>
+
+        <Pressable
           onPress={() => router.push('/about')}
           accessibilityRole="button"
           accessibilityLabel={t('more.aboutEntry')}
@@ -200,6 +223,56 @@ export default function MoreScreen() {
         </Card>
 
         <Card style={styles.card}>
+          <AppText variant="subheading">{t('display.title')}</AppText>
+          <AppText variant="caption" color="textSecondary">
+            {t('display.hint')}
+          </AppText>
+          <AppText variant="label" color="textSecondary">
+            {t('display.textSizeLabel')}
+          </AppText>
+          <View style={styles.languageRow}>
+            {(
+              [
+                { scale: 1, labelKey: 'display.textStandard' },
+                { scale: 1.15, labelKey: 'display.textLarge' },
+                { scale: 1.3, labelKey: 'display.textLarger' },
+              ] as const
+            ).map((option) => (
+              <Chip
+                key={option.scale}
+                label={t(option.labelKey)}
+                selected={textScale === option.scale}
+                onPress={() => {
+                  void setTextScale(option.scale);
+                }}
+                testID={`display-size-${option.scale}`}
+              />
+            ))}
+          </View>
+          <Pressable
+            onPress={() => {
+              void setReduceMotion(!reduceMotion);
+            }}
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: reduceMotion }}
+            accessibilityLabel={t('display.reduceMotionLabel')}
+            testID="display-motion-toggle"
+            style={({ pressed }) => [styles.themeRow, pressed && styles.entryCardPressed]}>
+            <Ionicons
+              name={reduceMotion ? 'checkmark-circle' : 'ellipse-outline'}
+              size={IconSize.md}
+              color={reduceMotion ? colors.primary : colors.textMuted}
+            />
+            <View style={styles.themeLabel}>
+              <AppText variant="bodyStrong">{t('display.reduceMotionLabel')}</AppText>
+              <AppText variant="caption" color="textSecondary">
+                {t('display.reduceMotionHint')}
+              </AppText>
+            </View>
+          </Pressable>
+        </Card>
+
+        <Card style={styles.card}>
           <AppText variant="subheading">{t('theme.title')}</AppText>
           <AppText variant="caption" color="textSecondary">
             {t('theme.hint')}
@@ -235,27 +308,29 @@ export default function MoreScreen() {
           </View>
         </Card>
 
-        <Card style={styles.card}>
-          <AppText variant="subheading">{t('more.upcomingTitle')}</AppText>
-          <AppText variant="caption" color="textSecondary">
-            {t('more.upcomingHint')}
-          </AppText>
-          <View style={styles.moduleList}>
-            {UPCOMING_MODULES.map((module) => (
-              <View key={module.key} style={styles.moduleRow}>
-                <Ionicons name={module.icon} size={IconSize.md} color={colors.textSecondary} />
-                <AppText variant="body" style={styles.moduleLabel}>
-                  {t(`more.modules.${module.key}`)}
-                </AppText>
-                <Badge
-                  label={t('more.phaseBadge', { phase: module.phase })}
-                  color={colors.textMuted}
-                  backgroundColor={colors.surfaceMuted}
-                />
-              </View>
-            ))}
-          </View>
-        </Card>
+        {UPCOMING_MODULES.length > 0 ? (
+          <Card style={styles.card}>
+            <AppText variant="subheading">{t('more.upcomingTitle')}</AppText>
+            <AppText variant="caption" color="textSecondary">
+              {t('more.upcomingHint')}
+            </AppText>
+            <View style={styles.moduleList}>
+              {UPCOMING_MODULES.map((module) => (
+                <View key={module.key} style={styles.moduleRow}>
+                  <Ionicons name={module.icon} size={IconSize.md} color={colors.textSecondary} />
+                  <AppText variant="body" style={styles.moduleLabel}>
+                    {t(`more.modules.${module.key}`)}
+                  </AppText>
+                  <Badge
+                    label={t('more.phaseBadge', { phase: module.phase })}
+                    color={colors.textMuted}
+                    backgroundColor={colors.surfaceMuted}
+                  />
+                </View>
+              ))}
+            </View>
+          </Card>
+        ) : null}
       </ScrollView>
     </Screen>
   );

@@ -25,11 +25,11 @@ import {
   validateUtcOffsetMinutes,
 } from '@/services/prayer-validation';
 import type {
+  AdjustablePrayer,
   PrayerCalculationMethod,
   PrayerMadhab,
-  PrayerName,
 } from '@/types/prayer';
-import { PRAYERS, PRAYER_CITY_MAX_LENGTH } from '@/types/prayer';
+import { ADJUSTABLE_PRAYERS, PRAYER_CITY_MAX_LENGTH } from '@/types/prayer';
 import { todayIsoDate } from '@/utils/dates';
 
 export interface UsePrayerSettingsResult {
@@ -54,8 +54,8 @@ export interface UsePrayerSettingsResult {
   utcOffsetText: string;
   setUtcOffsetText: (value: string) => void;
   utcOffsetError: string | null;
-  adjustTexts: Record<PrayerName, string>;
-  setAdjustText: (prayer: PrayerName, value: string) => void;
+  adjustTexts: Record<AdjustablePrayer, string>;
+  setAdjustText: (prayer: AdjustablePrayer, value: string) => void;
   adjustError: string | null;
 
   formError: string | null;
@@ -102,7 +102,7 @@ export function usePrayerSettings(): UsePrayerSettingsResult {
   const [latitudeText, setLatitudeText] = useState('');
   const [longitudeText, setLongitudeText] = useState('');
   const [utcOffsetText, setUtcOffsetText] = useState('+6');
-  const [adjustTexts, setAdjustTexts] = useState<Record<PrayerName, string>>({
+  const [adjustTexts, setAdjustTexts] = useState<Record<AdjustablePrayer, string>>({
     fajr: '0',
     dhuhr: '0',
     asr: '0',
@@ -159,7 +159,7 @@ export function usePrayerSettings(): UsePrayerSettingsResult {
   }, [service, reloadKey, t]);
 
   const setAdjustText = useCallback(
-    (prayer: PrayerName, value: string) => {
+    (prayer: AdjustablePrayer, value: string) => {
       setAdjustTexts((current) => ({ ...current, [prayer]: value }));
       if (adjustError) setAdjustError(null);
     },
@@ -208,14 +208,14 @@ export function usePrayerSettings(): UsePrayerSettingsResult {
     setUtcOffsetError(utcOffsetMinutes === null ? utcOffsetValidation : null);
 
     let adjustFailed: string | null = null;
-    const adjustments: Record<PrayerName, number> = {
+    const adjustments: Record<AdjustablePrayer, number> = {
       fajr: 0,
       dhuhr: 0,
       asr: 0,
       maghrib: 0,
       isha: 0,
     };
-    for (const prayer of PRAYERS) {
+    for (const prayer of ADJUSTABLE_PRAYERS) {
       const parsed = parseAdjustInput(adjustTexts[prayer]);
       if (parsed === null) {
         adjustFailed = 'prayer_adjust_invalid';

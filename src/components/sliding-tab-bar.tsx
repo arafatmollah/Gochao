@@ -11,6 +11,7 @@ import type { BottomTabBarProps } from 'expo-router/tabs';
 import { AnimatedTabIcon } from './animated-tab-icon';
 import { AppText } from './app-text';
 import { useTranslation } from '@/i18n';
+import { useDisplay } from '@/theme/display-context';
 import { Radius, Spacing, type ThemeColors } from '@/theme/tokens';
 import { useAppTheme } from '@/theme/theme-context';
 
@@ -43,12 +44,13 @@ function movePillTo(
   pillWidth: SharedValue<number>,
   pillOpacity: SharedValue<number>,
   settledRef: MutableRefObject<boolean>,
+  animate: boolean,
 ) {
   const pos = positions.value[index];
   if (!pos) {
     return;
   }
-  if (!settledRef.current) {
+  if (!settledRef.current || !animate) {
     translateX.value = pos.x;
     pillWidth.value = pos.width;
     pillOpacity.value = 1;
@@ -67,6 +69,7 @@ function movePillTo(
 export function SlidingTabBar({ state, navigation, insets }: BottomTabBarProps) {
   const { t } = useTranslation();
   const { colors } = useAppTheme();
+  const { reduceMotion } = useDisplay();
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
   const translateX = useSharedValue(0);
@@ -78,8 +81,8 @@ export function SlidingTabBar({ state, navigation, insets }: BottomTabBarProps) 
 
   useEffect(() => {
     activeRef.current = state.index;
-    movePillTo(state.index, positions, translateX, pillWidth, pillOpacity, settledRef);
-  }, [state.index, positions, translateX, pillWidth, pillOpacity]);
+    movePillTo(state.index, positions, translateX, pillWidth, pillOpacity, settledRef, !reduceMotion);
+  }, [state.index, positions, translateX, pillWidth, pillOpacity, reduceMotion]);
 
   const pillStyle = useAnimatedStyle(() => ({
     opacity: pillOpacity.value,
@@ -112,7 +115,7 @@ export function SlidingTabBar({ state, navigation, insets }: BottomTabBarProps) 
                 const { x, width } = event.nativeEvent.layout;
                 positions.value = { ...positions.value, [index]: { x, width } };
                 if (index === activeRef.current) {
-                  movePillTo(index, positions, translateX, pillWidth, pillOpacity, settledRef);
+                  movePillTo(index, positions, translateX, pillWidth, pillOpacity, settledRef, !reduceMotion);
                 }
               }}
               accessibilityRole="button"

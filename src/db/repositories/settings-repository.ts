@@ -6,6 +6,8 @@ import type { SqlDatabase } from '../sql';
 export const LANGUAGE_SETTING_KEY = 'language';
 /** Key under which the theme id lives in `app_settings`. */
 export const THEME_SETTING_KEY = 'theme';
+/** Key under which the last version shown in What's New lives. */
+export const VERSION_SEEN_KEY = 'app.versionSeen';
 
 export interface SettingsRepository {
   get(key: string): Promise<string | null>;
