@@ -240,7 +240,6 @@ function ThemedShell() {
         <Stack.Screen name="prayer" />
         <Stack.Screen name="prayer-settings" />
         <Stack.Screen name="prayer-history" />
-        <Stack.Screen name="health" />
         <Stack.Screen name="medicine-form" options={{ presentation: 'modal' }} />
         <Stack.Screen name="appointment-form" options={{ presentation: 'modal' }} />
         <Stack.Screen name="health-note-form" options={{ presentation: 'modal' }} />

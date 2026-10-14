@@ -6,7 +6,6 @@ import { FlatList, StyleSheet, View } from 'react-native';
 import { AppText } from '@/components/app-text';
 import { Banner } from '@/components/banner';
 import { Button } from '@/components/button';
-import { Card } from '@/components/card';
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
 import { LoadingState } from '@/components/loading-state';
@@ -18,7 +17,6 @@ import { usePrayerDay } from '@/features/prayer/hooks/use-prayer-day';
 import { formatIsoDateDisplay, formatWallClock12 } from '@/i18n/format';
 import { useTranslation } from '@/i18n';
 import { prayerWindowEnd, wallClockToMinutes } from '@/services/prayer-calculation';
-import type { RestrictedWindowId } from '@/services/prayer-calculation';
 import { IconSize, Radius, Spacing, type ThemeColors } from '@/theme/tokens';
 import { useAppTheme } from '@/theme/theme-context';
 import { useMemo } from 'react';
@@ -31,7 +29,6 @@ export default function PrayerScreen() {
     day,
     next,
     current,
-    restricted,
     prayedCount,
     loading,
     refreshing,
@@ -201,32 +198,6 @@ export default function PrayerScreen() {
                 />
               </View>
             </LinearGradient>
-              {restricted.length > 0 ? (
-                <Card style={styles.restrictedCard} testID="prayer-restricted-card">
-                  <View style={styles.restrictedHead}>
-                    <Ionicons name="alert-circle-outline" size={IconSize.md} color={colors.warning} />
-                    <View style={styles.restrictedHeadText}>
-                      <AppText variant="bodyStrong">{t('prayer.restrictedTitle')}</AppText>
-                      <AppText variant="caption" color="textSecondary">
-                        {t('prayer.restrictedHint')}
-                      </AppText>
-                    </View>
-                  </View>
-                  {restricted.map((window) => (
-                    <View key={window.id} style={styles.restrictedRow}>
-                      <AppText variant="body" style={styles.restrictedLabel} numberOfLines={1}>
-                        {t(RESTRICTED_LABEL_KEYS[window.id])}
-                      </AppText>
-                      <AppText variant="caption" color="textSecondary">
-                        {t('prayer.timeWindow', {
-                          start: formatWallClock12(window.start, locale),
-                          end: formatWallClock12(window.end, locale),
-                        })}
-                      </AppText>
-                    </View>
-                  ))}
-                </Card>
-              ) : null}
             </>
           }
           ListEmptyComponent={
@@ -242,12 +213,6 @@ function ListSeparator() {
   // Separator height carries no color, so this stays static.
   return <View style={separatorStyles.separator} />;
 }
-
-const RESTRICTED_LABEL_KEYS: Record<RestrictedWindowId, string> = {
-  'after-fajr': 'prayer.restrictedAfterFajr',
-  midday: 'prayer.restrictedMidday',
-  'after-asr': 'prayer.restrictedAfterAsr',
-};
 
 const separatorStyles = StyleSheet.create({
   separator: {
@@ -330,29 +295,5 @@ const makeStyles = (colors: ThemeColors) =>
       flexWrap: 'wrap',
       gap: Spacing.sm,
       paddingTop: Spacing.sm,
-    },
-    restrictedCard: {
-      gap: Spacing.sm,
-      marginBottom: Spacing.sm,
-      borderColor: colors.warning,
-      borderWidth: 1,
-    },
-    restrictedHead: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: Spacing.sm,
-    },
-    restrictedHeadText: {
-      flex: 1,
-      gap: 2,
-    },
-    restrictedRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: Spacing.sm,
-    },
-    restrictedLabel: {
-      flex: 1,
     },
   });

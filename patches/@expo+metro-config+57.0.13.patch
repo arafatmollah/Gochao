@@ -1,0 +1,17 @@
+diff --git a/node_modules/@expo/metro-config/build/serializer/serializeChunks.js b/node_modules/@expo/metro-config/build/serializer/serializeChunks.js
+index 10c8ce3..c109333 100644
+--- a/node_modules/@expo/metro-config/build/serializer/serializeChunks.js
++++ b/node_modules/@expo/metro-config/build/serializer/serializeChunks.js
+@@ -519,6 +519,12 @@ function gatherChunks(runtimePremodules, chunks, settings, preModules, graph, op
+             else if (asyncType &&
+                 // Workers require standalone bundles even when ordinary chunk splitting is disabled.
+                 (isWorker || splitChunks)) {
++                // Skip worker chunks in lazy development bundles: lazy graphs don't include
++                // worker dependencies, so there is no chunk to gather. Workers in lazy bundles
++                // are served from the dev server instead. (Backport of expo/expo#50244)
++                if (isWorker && options.includeAsyncPaths) {
++                    continue;
++                }
+                 const asyncChunks = gatherChunks(runtimePremodules, chunks, { test: pathToRegex(dependency.absolutePath) }, isWorker ? runtimePremodules : [], graph, options, true, isWorker);
+                 // Seal all chunks that are for web workers, as these must be self-sufficient chunks
+                 if (isWorker) {

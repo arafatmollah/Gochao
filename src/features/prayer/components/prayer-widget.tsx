@@ -17,7 +17,6 @@ import {
   nowWallClock,
   wallClockToMinutes,
 } from '@/services/prayer-calculation';
-import type { RestrictedWindow } from '@/services/prayer-calculation';
 import { IconSize, Radius, Spacing } from '@/theme/tokens';
 import type { ThemeColors } from '@/theme/tokens';
 import { useAppTheme } from '@/theme/theme-context';
@@ -29,19 +28,17 @@ import { LiveTimer } from './live-timer';
 export interface PrayerWidgetProps {
   /** Today's schedule with statuses; null hides the widget. */
   day: PrayerDay | null;
-  /** Voluntary-prayer pause windows; the active one takes over the display. */
-  restricted?: RestrictedWindow[];
   onPress: () => void;
   testID?: string;
 }
 
 /**
  * Animated prayer widget for the home dashboard: the active prayer window
- * (or restricted pause) with a live countdown, an animated progress bar,
+ * with a live countdown, an animated progress bar,
  * and per-prayer status dots. Read-only — tapping anywhere opens the
  * prayer module for logging.
  */
-export function PrayerWidget({ day, restricted, onPress, testID }: PrayerWidgetProps) {
+export function PrayerWidget({ day, onPress, testID }: PrayerWidgetProps) {
   const { colors } = useAppTheme();
   const { reduceMotion } = useDisplay();
   const { t, locale } = useTranslation();
@@ -75,38 +72,9 @@ export function PrayerWidget({ day, restricted, onPress, testID }: PrayerWidgetP
     );
   }, [day, clockTick]);
 
-  // Active restricted window containing right now, if any. Takes over the
-  // headline so the widget never invites prayer during a pause.
-  const restriction = useMemo(() => {
-    if (!restricted || restricted.length === 0) {
-      return null;
-    }
-    const nowMinutes = wallClockToMinutes(clockTick);
-    if (nowMinutes === null) {
-      return null;
-    }
-    return (
-      restricted.find((window) => {
-        const start = wallClockToMinutes(window.start);
-        const end = wallClockToMinutes(window.end);
-        return start !== null && end !== null && start <= nowMinutes && nowMinutes <= end;
-      }) ?? null
-    );
-  }, [restricted, clockTick]);
-
   const progress = useMemo(() => {
     if (!day) {
       return 0;
-    }
-    if (restriction) {
-      const startMinutes = wallClockToMinutes(restriction.start) ?? 0;
-      const endMinutes = wallClockToMinutes(restriction.end) ?? 0;
-      const nowMinutes = wallClockToMinutes(clockTick) ?? 0;
-      const span = endMinutes - startMinutes;
-      if (span <= 0) {
-        return 0;
-      }
-      return Math.min(Math.max((nowMinutes - startMinutes) / span, 0), 1);
     }
     // Elapsed share of the active window (start -> next prayer start),
     // located by name in the day's own order (tahajjud first). Isha's
@@ -128,7 +96,7 @@ export function PrayerWidget({ day, restricted, onPress, testID }: PrayerWidgetP
       return 0;
     }
     return Math.min(Math.max((nowMinutes - startMinutes) / span, 0), 1);
-  }, [day, current, restriction, clockTick]);
+  }, [day, current, clockTick]);
 
   useEffect(() => {
     progressAnim.value = withTiming(progress, { duration: 900 });
@@ -156,11 +124,8 @@ export function PrayerWidget({ day, restricted, onPress, testID }: PrayerWidgetP
     activePosition >= 0 ? (day.prayers[activePosition + 1]?.time ?? null) : null;
   const timerTarget = windowEnd ?? (!activeEntry ? nextEntry?.time : undefined);
   const activePrayer = current ?? next;
-  const badgeIcon = restriction
-    ? 'alert-circle-outline'
-    : focusEntry && isDayPrayer(focusEntry.prayer)
-      ? 'sunny-outline'
-      : 'moon-outline';
+  const badgeIcon =
+    focusEntry && isDayPrayer(focusEntry.prayer) ? 'sunny-outline' : 'moon-outline';
 
   return (
     <Animated.View entering={reduceMotion ? undefined : FadeInUp.duration(450).delay(80)}>
@@ -180,11 +145,7 @@ export function PrayerWidget({ day, restricted, onPress, testID }: PrayerWidgetP
           </View>
           <View style={styles.topText}>
             <AppText variant="label" style={styles.kicker}>
-              {restriction
-                ? t('prayer.restrictedTitle')
-                : activeEntry
-                  ? t('dashboard.prayerNowKicker')
-                  : t('dashboard.prayerNextKicker')}
+              {activeEntry ? t('dashboard.prayerNowKicker') : t('dashboard.prayerNextKicker')}
             </AppText>
             <AppText variant="caption" style={styles.muted}>
               {t('prayer.daySummary', { prayed: prayedCount, total: day.prayers.length })}
@@ -193,22 +154,7 @@ export function PrayerWidget({ day, restricted, onPress, testID }: PrayerWidgetP
           <Ionicons name="chevron-forward" size={IconSize.md} color={colors.heroMuted} />
         </View>
 
-        {restriction ? (
-          <View style={styles.nextRow}>
-            <AppText variant="heroValue" style={styles.nextName}>
-              {t('dashboard.prayerRestricted')}
-            </AppText>
-            <View style={styles.nextTime}>
-              <AppText variant="heading" style={styles.timeText}>
-                {t('prayer.timeWindow', {
-                  start: formatWallClock12(restriction.start, locale),
-                  end: formatWallClock12(restriction.end, locale),
-                })}
-              </AppText>
-              <LiveTimer targetTime={restriction.end} testID="dashboard-prayer-timer" />
-            </View>
-          </View>
-        ) : focusEntry ? (
+        {focusEntry ? (
           <View style={styles.nextRow}>
             <AppText variant="heroValue" style={styles.nextName}>
               {t(`prayer.names.${focusEntry.prayer}`)}

@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react-native';
+import { render, screen } from '@testing-library/react-native';
 
 jest.mock('react-native-safe-area-context', () => {
   const { View } = require('react-native');
@@ -48,11 +48,6 @@ function baseHook(overrides: Record<string, unknown> = {}) {
     day: baseDay(),
     next: { prayer: 'asr', time: '15:57', minutesLeft: 60 },
     current: { prayer: 'dhuhr', time: '11:46', endTime: '15:57' },
-    restricted: [
-      { id: 'after-fajr', start: '04:39', end: '06:12' },
-      { id: 'midday', start: '11:36', end: '11:46' },
-      { id: 'after-asr', start: '15:57', end: '17:35' },
-    ],
     prayedCount: 1,
     loading: false,
     refreshing: false,
@@ -76,14 +71,5 @@ describe('PrayerScreen', () => {
     expect(screen.getByTestId('prayer-row-tahajjud')).toBeTruthy();
     expect(screen.getByText('Tahajjud')).toBeTruthy();
     expect(screen.getByText('12:00 AM – 4:39 AM')).toBeTruthy();
-  });
-
-  it('shows the restricted-times card with all three windows', async () => {
-    await render(<PrayerScreen />);
-
-    const card = screen.getByTestId('prayer-restricted-card');
-    expect(within(card).getByText('4:39 AM – 6:12 AM')).toBeTruthy();
-    expect(within(card).getByText('11:36 AM – 11:46 AM')).toBeTruthy();
-    expect(within(card).getByText('3:57 PM – 5:35 PM')).toBeTruthy();
   });
 });

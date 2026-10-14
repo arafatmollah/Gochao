@@ -1,4 +1,4 @@
-import { addMinutesToWallClock, calculateDayTimes, calculateRestrictedWindows, calculateSunrise, findCurrentPrayer, findNextPrayer, minutesUntil, prayerWindowEnd } from '@/services/prayer-calculation';
+import { calculateDayTimes, findCurrentPrayer, findNextPrayer, minutesUntil, prayerWindowEnd } from '@/services/prayer-calculation';
 import { defaultPrayerSettings } from '@/db/repositories/prayer-repository';
 import { isDayPrayer } from '@/types/prayer';
 
@@ -201,46 +201,5 @@ describe('findCurrentPrayer', () => {
 
   it('returns null for an invalid current time', () => {
     expect(findCurrentPrayer([...times], 'bad')).toBeNull();
-  });
-});
-
-describe('restricted windows', () => {
-  const day = [
-    { prayer: 'tahajjud', time: '00:00' },
-    { prayer: 'fajr', time: '04:39' },
-    { prayer: 'dhuhr', time: '11:46' },
-    { prayer: 'asr', time: '15:57' },
-    { prayer: 'maghrib', time: '17:35' },
-    { prayer: 'isha', time: '18:50' },
-  ] as const;
-
-  it('calculates sunrise as a wall-clock time', () => {
-    const sunrise = calculateSunrise('2026-10-12', DHAKA);
-    expect(sunrise).toMatch(/^([01]\d|2[0-3]):[0-5]\d$/);
-  });
-
-  it('wraps minute arithmetic past midnight', () => {
-    expect(addMinutesToWallClock('23:55', 20)).toBe('00:15');
-    expect(addMinutesToWallClock('11:46', -10)).toBe('11:36');
-    expect(addMinutesToWallClock('bad', 10)).toBeNull();
-  });
-
-  it('builds the three pause windows from the day schedule', () => {
-    const windows = calculateRestrictedWindows([...day], '05:52');
-
-    expect(windows.map((window) => window.id)).toEqual(['after-fajr', 'midday', 'after-asr']);
-    expect(windows[0]).toEqual({ id: 'after-fajr', start: '04:39', end: '06:12' });
-    expect(windows[1]).toEqual({ id: 'midday', start: '11:36', end: '11:46' });
-    expect(windows[2]).toEqual({ id: 'after-asr', start: '15:57', end: '17:35' });
-  });
-
-  it('derives real Dhaka windows end to end', () => {
-    const times = calculateDayTimes('2026-10-12', DHAKA);
-    const sunrise = calculateSunrise('2026-10-12', DHAKA);
-    const windows = calculateRestrictedWindows(times, sunrise);
-
-    expect(windows).toHaveLength(3);
-    const fajr = times.find((entry) => entry.prayer === 'fajr')?.time;
-    expect(windows[0].start).toBe(fajr);
   });
 });

@@ -21,8 +21,6 @@ import { createFamilyRequestService } from '@/services/family-request-service';
 import { createMedicineService } from '@/services/medicine-service';
 import { createNoteService } from '@/services/note-service';
 import { createPrayerService } from '@/services/prayer-service';
-import { calculateRestrictedWindows, calculateSunrise } from '@/services/prayer-calculation';
-import type { RestrictedWindow } from '@/services/prayer-calculation';
 import { createTaskService } from '@/services/task-service';
 import { createTransactionService } from '@/services/transaction-service';
 import type { BillDueItem } from '@/types/bill';
@@ -71,8 +69,6 @@ export interface UseDashboardResult {
   openRequestCount: number;
   /** Today's prayer schedule with statuses; null when unavailable (widget hides). */
   prayerDay: PrayerDay | null;
-  /** Voluntary-prayer pause windows for today; the widget honors them. */
-  prayerRestricted: RestrictedWindow[];
   /** Today's due doses (first few); the full checklist lives on /health. */
   dueDoses: DueDose[];
   today: string;
@@ -145,7 +141,6 @@ export function useDashboard(): UseDashboardResult {
   const [openFamilyRequests, setOpenFamilyRequests] = useState<FamilyRequestListItem[]>([]);
   const [openRequestCount, setOpenRequestCount] = useState(0);
   const [prayerDay, setPrayerDay] = useState<PrayerDay | null>(null);
-  const [prayerRestricted, setPrayerRestricted] = useState<RestrictedWindow[]>([]);
   const [dueDoses, setDueDoses] = useState<DueDose[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -176,7 +171,6 @@ export function useDashboard(): UseDashboardResult {
         openRequests,
         openRequestTotal,
         prayer,
-        prayerSettings,
         allDueDoses,
       ] = await Promise.all([
         service.list({
@@ -196,7 +190,6 @@ export function useDashboard(): UseDashboardResult {
         familyRequestService.countOutstanding(),
         // Fail-soft: a prayer failure hides the widget instead of the dashboard.
         prayerService.getDay(currentToday).catch(() => null),
-        prayerService.getSettings().catch(() => null),
         // Fail-soft: a dose failure hides the section instead of the dashboard.
         medicineService.listDueDoses(currentToday).catch(() => []),
       ]);
@@ -207,18 +200,6 @@ export function useDashboard(): UseDashboardResult {
       setOpenFamilyRequests(openRequests);
       setOpenRequestCount(openRequestTotal);
       setPrayerDay(prayer);
-      try {
-        setPrayerRestricted(
-          prayer && prayerSettings
-            ? calculateRestrictedWindows(
-                prayer.prayers.map(({ prayer: name, time }) => ({ prayer: name, time })),
-                calculateSunrise(currentToday, prayerSettings),
-              )
-            : [],
-        );
-      } catch {
-        setPrayerRestricted([]);
-      }
       setDueDoses(allDueDoses.slice(0, DASHBOARD_DOSE_LIMIT));
       setSummary(
         buildDashboardSummary({
@@ -320,7 +301,6 @@ export function useDashboard(): UseDashboardResult {
     openFamilyRequests,
     openRequestCount,
     prayerDay,
-    prayerRestricted,
     dueDoses,
     today: todayIsoDate(),
     loading,

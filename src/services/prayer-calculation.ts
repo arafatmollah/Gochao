@@ -68,10 +68,6 @@ function toWallClock(instant: Date, utcOffsetMinutes: number): string {
 
 /** Tahajjud window opens at local midnight and runs until Fajr. */
 export const TAHAJJUD_START = '00:00';
-/** Minutes after sunrise until voluntary prayer resumes. */
-export const SUNRISE_BUFFER_MINUTES = 20;
-/** Minutes before Dhuhr during which voluntary prayer pauses (midday). */
-export const MIDDAY_BUFFER_MINUTES = 10;
 
 function loadPrayerTimes(
   date: string,
@@ -118,12 +114,6 @@ export function calculateDayTimes(date: string, settings: PrayerSettings): Praye
         ? TAHAJJUD_START
         : toWallClock(byPrayer[prayer], settings.utcOffsetMinutes),
   }));
-}
-
-/** Sunrise wall-clock for a calendar day (drives the restricted window). */
-export function calculateSunrise(date: string, settings: PrayerSettings): string {
-  const { times } = loadPrayerTimes(date, settings);
-  return toWallClock(times.sunrise, settings.utcOffsetMinutes);
 }
 
 /** Current device-local wall-clock `HH:mm`. */
@@ -188,60 +178,6 @@ export function minutesUntil(fromTime: string, toTime: string): number | null {
     return null;
   }
   return to - from;
-}
-
-/** Shifts a wall-clock `HH:mm` by whole minutes, wrapping past midnight. */
-export function addMinutesToWallClock(time: string, minutes: number): string | null {
-  const base = wallClockToMinutes(time);
-  if (base === null) {
-    return null;
-  }
-  const shifted = ((base + minutes) % 1440 + 1440) % 1440;
-  return `${String(Math.floor(shifted / 60)).padStart(2, '0')}:${String(shifted % 60).padStart(2, '0')}`;
-}
-
-export type RestrictedWindowId = 'after-fajr' | 'midday' | 'after-asr';
-
-export interface RestrictedWindow {
-  id: RestrictedWindowId;
-  /** Window start/end as wall-clock `HH:mm`. */
-  start: string;
-  end: string;
-}
-
-/**
- * Voluntary-prayer pause windows for a day: after Fajr until the sun is up,
- * the minutes around solar noon before Dhuhr, and after Asr until Maghrib.
- * Windows with unparsable bounds are skipped, never fabricated.
- */
-export function calculateRestrictedWindows(
-  dayTimes: PrayerTime[],
-  sunrise: string,
-): RestrictedWindow[] {
-  const at = (prayer: PrayerName): string | null =>
-    dayTimes.find((entry) => entry.prayer === prayer)?.time ?? null;
-  const fajr = at('fajr');
-  const dhuhr = at('dhuhr');
-  const asr = at('asr');
-  const maghrib = at('maghrib');
-
-  const windows: RestrictedWindow[] = [];
-  if (fajr) {
-    const end = addMinutesToWallClock(sunrise, SUNRISE_BUFFER_MINUTES);
-    if (end) {
-      windows.push({ id: 'after-fajr', start: fajr, end });
-    }
-  }
-  if (dhuhr) {
-    const start = addMinutesToWallClock(dhuhr, -MIDDAY_BUFFER_MINUTES);
-    if (start) {
-      windows.push({ id: 'midday', start, end: dhuhr });
-    }
-  }
-  if (asr && maghrib) {
-    windows.push({ id: 'after-asr', start: asr, end: maghrib });
-  }
-  return windows;
 }
 
 /**
