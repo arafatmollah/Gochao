@@ -2,7 +2,7 @@
   "expo": {
     "name": "Gochao",
     "slug": "gochao",
-    "version": "1.0.1",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "gochao",
@@ -36,9 +36,9 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#FAF7F2",
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "backgroundColor": "#0A4A3E",
+          "image": "./assets/images/splash-mark.png",
+          "imageWidth": 168
         }
       ],
       "expo-sqlite",

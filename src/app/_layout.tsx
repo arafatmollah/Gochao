@@ -1,12 +1,13 @@
 import { DefaultTheme, Stack, ThemeProvider, router } from 'expo-router';
 import { SQLiteProvider, useSQLiteContext } from 'expo-sqlite';
+import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import Constants from 'expo-constants';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 
 import { ErrorState } from '@/components/error-state';
-import { LoadingState } from '@/components/loading-state';
+import { AnimatedSplash } from '@/components/animated-splash';
 import { NotificationBootstrap } from '@/components/notification-bootstrap';
 import { BackupBootstrap } from '@/components/backup-bootstrap';
 import { EntertainmentBootstrap } from '@/components/entertainment-bootstrap';
@@ -19,6 +20,12 @@ import { Colors, Spacing } from '@/theme/tokens';
 import { AppThemeProvider, useAppTheme } from '@/theme/theme-context';
 import { DisplayProvider } from '@/theme/display-context';
 import { THEME_STATUS_BAR } from '@/theme/themes';
+
+// The native launch image stays up until the animated splash takes over
+// and dismisses it after its exit fade (safe to call on web too).
+void SplashScreen.preventAutoHideAsync().catch(() => {
+  // Splash control unavailable: the app still starts behind the overlay.
+});
 
 function navigateToNotificationUrl(url?: unknown) {
   if (url === '/prayer') {
@@ -91,6 +98,7 @@ export default function RootLayout() {
   const [dbReady, setDbReady] = useState(false);
   const [i18nReady, setI18nReady] = useState(false);
   const [initAttempt, setInitAttempt] = useState(0);
+  const [splashDone, setSplashDone] = useState(false);
   useNotificationObserver();
 
   const markDbReady = useCallback(() => setDbReady(true), []);
@@ -114,6 +122,7 @@ export default function RootLayout() {
   // flashes the English shell. This screen is intentionally English: it runs
   // before the database (and thus the language preference) is available.
   const showOverlay = !dbReady || !i18nReady;
+  const hideSplash = useCallback(() => setSplashDone(true), []);
 
   return (
     <>
@@ -145,9 +154,12 @@ export default function RootLayout() {
               </AppThemeProvider>
             </I18nProvider>
           </SQLiteProvider>
-          {showOverlay && (
+          {!splashDone && (
             <View style={styles.overlay}>
-              <LoadingState label="Opening Gochao…" />
+              <AnimatedSplash
+                shouldHide={!showOverlay || dbError !== null}
+                onHidden={hideSplash}
+              />
             </View>
           )}
         </>
