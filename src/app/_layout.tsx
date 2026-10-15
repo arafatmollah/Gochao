@@ -21,6 +21,11 @@ import { AppThemeProvider, useAppTheme } from '@/theme/theme-context';
 import { DisplayProvider } from '@/theme/display-context';
 import { THEME_STATUS_BAR } from '@/theme/themes';
 
+/** Silent remounts before a database open failure reaches the error screen. */
+const DB_AUTO_RETRIES = 2;
+/** Backoff between silent database open retries. */
+const DB_RETRY_DELAY_MS = 600;
+
 // The native launch image stays up until the animated splash takes over
 // and dismisses it after its exit fade (safe to call on web too).
 void SplashScreen.preventAutoHideAsync().catch(() => {
@@ -101,16 +106,35 @@ export default function RootLayout() {
   const [splashDone, setSplashDone] = useState(false);
   useNotificationObserver();
 
-  const markDbReady = useCallback(() => setDbReady(true), []);
+  // Silent budget for transient open failures (storage contention on
+  // Android surfaces a one-off open error that a fresh open clears).
+  // Opening is idempotent — PRAGMAs plus version-gated migrations that
+  // roll back on failure — so remounting the provider is always safe.
+  const autoRetryRef = useRef(0);
+
+  const markDbReady = useCallback(() => {
+    autoRetryRef.current = 0;
+    setDbReady(true);
+  }, []);
   const markI18nReady = useCallback(() => setI18nReady(true), []);
 
   // SQLiteProvider reports open/init failures by calling `onError` during
   // render, so the state update is deferred out of the render phase.
+  // Transient failures remount the provider silently; only a persistent
+  // failure reaches the error screen.
   const reportDbError = useCallback((error: Error) => {
+    if (autoRetryRef.current < DB_AUTO_RETRIES) {
+      autoRetryRef.current += 1;
+      setTimeout(() => {
+        setInitAttempt((attempt) => attempt + 1);
+      }, DB_RETRY_DELAY_MS);
+      return;
+    }
     queueMicrotask(() => setDbError(error.message));
   }, []);
 
   const retryInit = useCallback(() => {
+    autoRetryRef.current = 0;
     setDbError(null);
     setDbReady(false);
     setI18nReady(false);
