@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Image, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as SplashScreen from 'expo-splash-screen';
@@ -49,6 +49,10 @@ export interface AnimatedSplashProps {
  * the right starting from the last one — revealing the app icon with a
  * soft spring bounce. Holds the icon (with a loader for slow starts)
  * until the app is ready, then fades out. Calls `onHidden` exactly once.
+ *
+ * The native splash is dismissed as soon as this overlay has laid out, so
+ * the choreography plays on top of the app instead of behind the native
+ * launch image (which `preventAutoHideAsync` would otherwise keep up).
  */
 export function AnimatedSplash({ shouldHide, onHidden, testID = 'splash-screen' }: AnimatedSplashProps) {
   const [lettersOut, setLettersOut] = useState(false);
@@ -67,25 +71,38 @@ export function AnimatedSplash({ shouldHide, onHidden, testID = 'splash-screen' 
     };
   }, []);
 
-  // One-shot exit guard: hide the native splash, then let the shell
-  // unmount this view (its `exiting` fade plays on unmount).
+  // One-shot exit guard: once the choreography AND the app are ready, hold
+  // a beat (matching the fade) so the shell can unmount this view (its
+  // `exiting` fade plays on unmount).
   const exitStartedRef = useRef(false);
   useEffect(() => {
     if (!shouldHide || !sequenceDone || exitStartedRef.current) {
       return;
     }
     exitStartedRef.current = true;
-    const timer = setTimeout(() => {
-      // Reveal this view first (native drops away underneath it); the shell
-      // unmounts it right after, playing the fade below.
-      SplashScreen.hideAsync().then(onHidden, onHidden);
-    }, EXIT_DURATION_MS);
+    const timer = setTimeout(onHidden, EXIT_DURATION_MS);
     return () => clearTimeout(timer);
   }, [shouldHide, sequenceDone, onHidden]);
+
+  // Reveal this overlay by dropping the native splash underneath it as soon
+  // as it has laid out; the solid base matches the native splash exactly, so
+  // the swap is invisible and the choreography above becomes visible. Native
+  // only in practice — on web `hideAsync` is a no-op.
+  const nativeSplashHiddenRef = useRef(false);
+  const handleLayout = useCallback(() => {
+    if (nativeSplashHiddenRef.current) {
+      return;
+    }
+    nativeSplashHiddenRef.current = true;
+    void SplashScreen.hideAsync().catch(() => {
+      // Splash control unavailable: the overlay still covers the app.
+    });
+  }, []);
 
   return (
     <Animated.View
       exiting={FadeOut.duration(EXIT_DURATION_MS)}
+      onLayout={handleLayout}
       style={styles.fill}
       testID={testID}
     >

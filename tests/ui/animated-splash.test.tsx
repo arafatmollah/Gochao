@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
 
 jest.mock('expo-splash-screen', () => ({
   preventAutoHideAsync: jest.fn(() => Promise.resolve()),
@@ -46,32 +46,40 @@ describe('AnimatedSplash', () => {
       expect(screen.getByTestId(`splash-letter-${index}`)).toBeTruthy();
       expect(screen.getByTestId(`splash-letter-${index}`).props.children).toBe(char);
     }
-    expect(mockHideAsync).not.toHaveBeenCalled();
   });
 
-  it('waits for the letter cascade, then hides the native splash and reports', async () => {
+  it('dismisses the native splash on layout so the reveal animation is visible', async () => {
+    await render(<AnimatedSplash shouldHide={false} onHidden={jest.fn()} />);
+
+    expect(mockHideAsync).not.toHaveBeenCalled();
+
+    fireEvent(screen.getByTestId('splash-screen'), 'layout', {
+      nativeEvent: { layout: { x: 0, y: 0, width: 375, height: 812 } },
+    });
+    expect(mockHideAsync).toHaveBeenCalledTimes(1);
+  });
+
+  it('waits for the letter cascade, then reports once after the exit fade', async () => {
     jest.useFakeTimers();
     try {
       const onHidden = jest.fn();
       await render(<AnimatedSplash shouldHide onHidden={onHidden} />);
 
-      // Mid-cascade: nothing hidden yet.
+      // Mid-cascade: the view is still held.
       await act(async () => {
         jest.advanceTimersByTime(1000);
       });
-      expect(mockHideAsync).not.toHaveBeenCalled();
       expect(onHidden).not.toHaveBeenCalled();
 
       // Past the sequence (1950ms): the exit fade is now scheduled.
       await act(async () => {
         jest.advanceTimersByTime(2000);
       });
-      expect(mockHideAsync).not.toHaveBeenCalled();
-      // Past the exit fade (450ms): native splash hidden, shell notified.
+      expect(onHidden).not.toHaveBeenCalled();
+      // Past the exit fade (450ms): the shell is notified.
       await act(async () => {
         jest.advanceTimersByTime(500);
       });
-      expect(mockHideAsync).toHaveBeenCalledTimes(1);
       expect(onHidden).toHaveBeenCalledTimes(1);
     } finally {
       jest.useRealTimers();

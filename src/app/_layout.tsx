@@ -26,8 +26,9 @@ const DB_AUTO_RETRIES = 2;
 /** Backoff between silent database open retries. */
 const DB_RETRY_DELAY_MS = 600;
 
-// The native launch image stays up until the animated splash takes over
-// and dismisses it after its exit fade (safe to call on web too).
+// The native launch image stays up only until the animated splash overlay has
+// laid out and dismisses it, so the reveal animation is visible on top (safe
+// to call on web too).
 void SplashScreen.preventAutoHideAsync().catch(() => {
   // Splash control unavailable: the app still starts behind the overlay.
 });
